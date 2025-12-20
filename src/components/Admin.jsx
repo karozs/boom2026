@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, User, LayoutDashboard, LogOut, DollarSign, Users, Ticket, AlertTriangle, Search, Eye, X, Printer, Trash2, Check } from 'lucide-react';
+import { Lock, User, LayoutDashboard, LogOut, DollarSign, Users, Ticket, AlertTriangle, Search, Eye, X, Printer, Trash2, Check, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Html5QrcodeScanner } from 'html5-qrcode';
@@ -325,6 +325,8 @@ const AdminDashboard = ({ onLogout }) => {
                     >
                         Aprobados / Historial
                     </button>
+
+
                     <button
                         onClick={() => setActiveTab('scanner')}
                         className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'scanner'
@@ -333,11 +335,21 @@ const AdminDashboard = ({ onLogout }) => {
                     >
                         Escáner / Puerta
                     </button>
+                    <button
+                        onClick={() => setActiveTab('content')}
+                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'content'
+                            ? 'bg-neon-blue text-white shadow-[0_0_15px_rgba(0,255,255,0.4)]'
+                            : 'bg-dark-800 text-gray-400 hover:text-white border border-white/10'}`}
+                    >
+                        Gestor de Contenido
+                    </button>
                 </div>
 
-                {/* Scanner Section or Table */}
+                {/* Content Area */}
                 {activeTab === 'scanner' ? (
                     <ScannerSection sales={sales} fetchSales={fetchSales} />
+                ) : activeTab === 'content' ? (
+                    <ContentManager />
                 ) : (
                     <div className="bg-dark-900 rounded-2xl border border-white/10 overflow-hidden">
                         <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -863,6 +875,208 @@ const ScannerSection = ({ sales, fetchSales }) => {
     );
 
 
+};
+
+const ContentManager = () => {
+    const [activeSection, setActiveSection] = useState('lineup'); // lineup, gallery
+    const [lineupItems, setLineupItems] = useState([]);
+    const [galleryItems, setGalleryItems] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+
+    // Initial Fetch
+    useEffect(() => {
+        fetchContent();
+    }, [activeSection]);
+
+    const fetchContent = async () => {
+        setLoading(true);
+        try {
+            if (activeSection === 'lineup') {
+                const { data, error } = await supabase
+                    .from('boom_lineup')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+                if (data) setLineupItems(data);
+            } else {
+                const { data, error } = await supabase
+                    .from('boom_gallery')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+                if (data) setGalleryItems(data);
+            }
+        } catch (error) {
+            console.error("Error fetching content:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFileUpload = async (file, bucketFolder) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${bucketFolder}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('content')
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+            .from('content')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    };
+
+    const handleUpdateLineupVideo = async (id, file) => {
+        if (!file) return;
+        setUploading(true);
+        try {
+            const publicUrl = await handleFileUpload(file, 'videos');
+
+            const { error } = await supabase
+                .from('boom_lineup')
+                .update({ video_url: publicUrl })
+                .eq('id', id);
+
+            if (error) throw error;
+            alert('✅ Video actualizado correctamente');
+            fetchContent();
+        } catch (error) {
+            console.error(error);
+            alert('Error al subir video: ' + error.message);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleAddGalleryImage = async (file) => {
+        if (!file) return;
+        setUploading(true);
+        try {
+            const publicUrl = await handleFileUpload(file, 'gallery');
+
+            const { error } = await supabase
+                .from('boom_gallery')
+                .insert([{ image_url: publicUrl, title: 'Nueva Imagen' }]);
+
+            if (error) throw error;
+            alert('✅ Imagen agregada');
+            fetchContent();
+        } catch (error) {
+            console.error(error);
+            alert('Error al subir imagen: ' + error.message);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleDeleteGalleryImage = async (id) => {
+        if (!confirm('¿Eliminar imagen?')) return;
+        try {
+            await supabase.from('boom_gallery').delete().eq('id', id);
+            fetchContent();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    return (
+        <div className="bg-dark-900 rounded-2xl border border-white/10 overflow-hidden p-6">
+            <h3 className="text-xl font-bold text-white mb-6">Gestor de Contenido Multimedia</h3>
+
+            <div className="flex gap-4 mb-8">
+                <button
+                    onClick={() => setActiveSection('lineup')}
+                    className={`px-4 py-2 rounded-lg font-bold ${activeSection === 'lineup' ? 'bg-neon-pink text-white' : 'bg-white/5 text-gray-400'}`}
+                >
+                    Lineup & Videos
+                </button>
+                <button
+                    onClick={() => setActiveSection('gallery')}
+                    className={`px-4 py-2 rounded-lg font-bold ${activeSection === 'gallery' ? 'bg-neon-blue text-white' : 'bg-white/5 text-gray-400'}`}
+                >
+                    Galería de Fotos
+                </button>
+            </div>
+
+            {loading ? (
+                <div className="text-center text-gray-500 py-10">Cargando contenido...</div>
+            ) : (
+                <>
+                    {activeSection === 'lineup' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {lineupItems.map(item => (
+                                <div key={item.id} className="bg-black/40 p-4 rounded-xl border border-white/10">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h4 className="font-bold text-white">{item.name}</h4>
+                                            <p className="text-xs text-gray-400">{item.genre_subtitle}</p>
+                                        </div>
+                                        <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${item.color_gradient}`}></div>
+                                    </div>
+
+                                    <div className="mb-4 bg-black rounded-lg h-32 flex items-center justify-center overflow-hidden relative group">
+                                        {item.video_url ? (
+                                            <video src={item.video_url} className="w-full h-full object-cover" controls />
+                                        ) : (
+                                            <span className="text-gray-600 text-xs">Sin Video</span>
+                                        )}
+                                    </div>
+
+                                    <label className="block w-full text-center py-2 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition-colors text-sm text-white">
+                                        {uploading ? 'Subiendo...' : 'Subir/Cambiar Video'}
+                                        <input
+                                            type="file"
+                                            accept="video/mp4"
+                                            className="hidden"
+                                            onChange={(e) => handleUpdateLineupVideo(item.id, e.target.files[0])}
+                                            disabled={uploading}
+                                        />
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {activeSection === 'gallery' && (
+                        <div>
+                            <div className="mb-6 flex justify-end">
+                                <label className="flex items-center gap-2 px-4 py-2 bg-neon-green text-black font-bold rounded-lg cursor-pointer hover:bg-green-400 transition-colors">
+                                    <Plus size={20} /> Agregar Imagen
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => handleAddGalleryImage(e.target.files[0])}
+                                        disabled={uploading}
+                                    />
+                                </label>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {galleryItems.map(item => (
+                                    <div key={item.id} className="relative group aspect-square rounded-xl overflow-hidden bg-black">
+                                        <img src={item.image_url} alt="Gallery" className="w-full h-full object-cover" />
+                                        <button
+                                            onClick={() => handleDeleteGalleryImage(item.id)}
+                                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))}
+                                {galleryItems.length === 0 && (
+                                    <p className="col-span-4 text-center text-gray-500 py-10">No hay imágenes en la galería.</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
 };
 
 export default function Admin() {

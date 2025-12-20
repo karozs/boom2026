@@ -2,93 +2,39 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic2, Music, Disc, Zap, Headphones, Sparkles, Radio, Play, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-const musicGenres = [
-    {
-        name: "CUMBIA PERUANA",
-        genre: "Cumbia / Tropical",
-        color: "from-green-500 to-emerald-600",
-        icon: Music,
-        description: "Los mejores éxitos de cumbia que harán bailar a todos.",
-        youtubeId: "8Yvag1aOVdc",
-        startTime: 100,
-        endTime: 120
-    },
-    {
-        name: "HUAYNO & FOLKLORE",
-        genre: "Música Andina",
-        color: "from-red-500 to-orange-600",
-        icon: Mic2,
-        description: "El ritmo de los Andes que nos representa.",
-        youtubeId: "kKu_A19z2j4",
-        startTime: 40,
-        endTime: 60
-    },
-    {
-        name: "REGGAETON",
-        genre: "Urbano Latino",
-        color: "from-neon-pink to-purple-600",
-        icon: Headphones,
-        description: "Los hits más candentes del reggaeton internacional.",
-        youtubeId: "EKEjR0rwE_c",
-        startTime: 165,
-        endTime: 180
-    },
-    {
-        name: "SALSA & MERENGUE",
-        genre: "Tropical Latino",
-        color: "from-yellow-500 to-amber-600",
-        icon: Sparkles,
-        description: "Sabor latino para bailar sin parar.",
-        youtubeId: "OXgA5RXoLfE",
-        startTime: 25,
-        endTime: 55
-    },
-    {
-        name: "ELECTRÓNICA",
-        genre: "EDM / House",
-        color: "from-blue-500 to-cyan-600",
-        icon: Zap,
-        description: "Beats electrónicos para elevar la energía.",
-        youtubeId: "Hn3QKpLWDKo",
-        startTime: 30,
-        endTime: 60
-    },
-    {
-        name: "ROCK EN ESPAÑOL",
-        genre: "Rock Latino",
-        color: "from-purple-500 to-pink-600",
-        icon: Radio,
-        description: "Clásicos del rock que todos cantamos.",
-        youtubeId: "BQ3iqq49Ew8",
-        startTime: 18,
-        endTime: 48
-    },
-    {
-        name: "MÚSICA ROMÁNTICA",
-        genre: "Baladas / Pop",
-        color: "from-orange-500 to-red-600",
-        icon: Disc,
-        description: "Las canciones que enamoran y emocionan.",
-        youtubeId: "YQGVW-PZ5zg",
-        startTime: 52,
-        endTime: 120
-    },
-    {
-        name: "FIESTA RETRO",
-        genre: "Clásicos 80s-90s",
-        color: "from-pink-500 to-rose-600",
-        icon: Sparkles,
-        description: "Los éxitos que marcaron generaciones.",
-        youtubeId: "tF_-oPPXcPk",
-        startTime: 180,
-        endTime: 195
-    },
-];
+import { supabase } from '../lib/supabaseClient';
+
+const iconMap = {
+    'Music': Music,
+    'Mic2': Mic2,
+    'Headphones': Headphones,
+    'Sparkles': Sparkles,
+    'Zap': Zap,
+    'Radio': Radio,
+    'Disc': Disc,
+    'Play': Play
+};
 
 const Lineup = () => {
     const [selectedGenre, setSelectedGenre] = useState(null);
-    const playerRef = useRef(null);
-    const intervalRef = useRef(null);
+    const [genres, setGenres] = useState([]);
+
+    useEffect(() => {
+        fetchGenres();
+    }, []);
+
+    const fetchGenres = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('boom_lineup')
+                .select('*')
+                .order('display_order', { ascending: true });
+
+            if (data) setGenres(data);
+        } catch (error) {
+            console.error('Error fetching lineup:', error);
+        }
+    };
 
     const playPreview = (genre) => {
         setSelectedGenre(genre);
@@ -96,60 +42,11 @@ const Lineup = () => {
 
     const closeModal = () => {
         setSelectedGenre(null);
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-        }
     };
 
-    // Load YouTube IFrame API
-    useEffect(() => {
-        if (!window.YT) {
-            const tag = document.createElement('script');
-            tag.src = 'https://www.youtube.com/iframe_api';
-            const firstScriptTag = document.getElementsByTagName('script')[0];
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        }
-    }, []);
-
-    // Initialize player when genre is selected
-    useEffect(() => {
-        if (selectedGenre && window.YT && window.YT.Player) {
-            // Small delay to ensure iframe is in DOM
-            setTimeout(() => {
-                playerRef.current = new window.YT.Player('youtube-player', {
-                    events: {
-                        onReady: (event) => {
-                            event.target.playVideo();
-
-                            // Check current time and stop at endTime
-                            intervalRef.current = setInterval(() => {
-                                const currentTime = event.target.getCurrentTime();
-                                if (currentTime >= selectedGenre.endTime) {
-                                    event.target.pauseVideo();
-                                    clearInterval(intervalRef.current);
-                                }
-                            }, 100);
-                        },
-                        onStateChange: (event) => {
-                            // If user manually seeks past endTime, pause
-                            if (event.data === window.YT.PlayerState.PLAYING) {
-                                const currentTime = event.target.getCurrentTime();
-                                if (currentTime >= selectedGenre.endTime) {
-                                    event.target.pauseVideo();
-                                }
-                            }
-                        }
-                    }
-                });
-            }, 100);
-        }
-
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
-    }, [selectedGenre]);
+    const getIcon = (iconName) => {
+        return iconMap[iconName] || Music;
+    };
 
     return (
         <section id="lineup" className="py-24 bg-black relative overflow-hidden">
@@ -167,54 +64,57 @@ const Lineup = () => {
                 </motion.h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {musicGenres.map((genre, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 50 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
-                            whileHover={{ y: -15, scale: 1.02 }}
-                            className="group relative h-[450px] overflow-hidden rounded-3xl bg-dark-800 border border-white/5 hover:border-white/30 transition-all duration-300"
-                        >
-                            {/* Dynamic Background */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${genre.color} opacity-10 group-hover:opacity-20 transition-all duration-500`}></div>
-
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                                {/* Icon Container with Glow */}
-                                <div className={`relative mb-8 p-6 rounded-full bg-gradient-to-br ${genre.color} bg-opacity-20 backdrop-blur-md group-hover:scale-110 transition-transform duration-500 shadow-[0_0_30px_rgba(255,255,255,0.1)]`}>
-                                    <genre.icon size={48} className="text-white relative z-10" />
-                                    <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${genre.color} blur-xl opacity-40 group-hover:opacity-70 transition-opacity`}></div>
-                                </div>
-
-                                <h3 className="text-2xl font-bold text-white font-display mb-2 tracking-wide group-hover:scale-105 transition-transform">
-                                    {genre.name}
-                                </h3>
-
-                                <span className={`inline-block px-3 py-1 rounded-full border border-white/20 text-xs font-bold uppercase tracking-wider mb-4 text-gray-300 group-hover:text-white group-hover:border-white/50 transition-colors`}>
-                                    {genre.genre}
-                                </span>
-
-                                <p className="text-gray-400 text-sm opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-100">
-                                    "{genre.description}"
-                                </p>
-                            </div>
-
-                            {/* Bottom Play Button */}
-                            <div
-                                onClick={() => playPreview(genre)}
-                                className="absolute bottom-0 left-0 w-full p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/80 to-transparent cursor-pointer hover:from-black/90"
+                    {genres.map((genre, index) => {
+                        const IconComponent = getIcon(genre.icon_name);
+                        return (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 50 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.1 }}
+                                whileHover={{ y: -15, scale: 1.02 }}
+                                className="group relative h-[450px] overflow-hidden rounded-3xl bg-dark-800 border border-white/5 hover:border-white/30 transition-all duration-300"
                             >
-                                <div className="flex items-center justify-center gap-2 text-white font-bold text-sm uppercase tracking-widest">
-                                    <Play size={16} className="fill-current" /> Escuchar Preview
+                                {/* Dynamic Background */}
+                                <div className={`absolute inset-0 bg-gradient-to-br ${genre.color_gradient} opacity-10 group-hover:opacity-20 transition-all duration-500`}></div>
+
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+                                    {/* Icon Container with Glow */}
+                                    <div className={`relative mb-8 p-6 rounded-full bg-gradient-to-br ${genre.color_gradient} bg-opacity-20 backdrop-blur-md group-hover:scale-110 transition-transform duration-500 shadow-[0_0_30px_rgba(255,255,255,0.1)]`}>
+                                        <IconComponent size={48} className="text-white relative z-10" />
+                                        <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${genre.color_gradient} blur-xl opacity-40 group-hover:opacity-70 transition-opacity`}></div>
+                                    </div>
+
+                                    <h3 className="text-2xl font-bold text-white font-display mb-2 tracking-wide group-hover:scale-105 transition-transform">
+                                        {genre.name}
+                                    </h3>
+
+                                    <span className={`inline-block px-3 py-1 rounded-full border border-white/20 text-xs font-bold uppercase tracking-wider mb-4 text-gray-300 group-hover:text-white group-hover:border-white/50 transition-colors`}>
+                                        {genre.genre_subtitle}
+                                    </span>
+
+                                    <p className="text-gray-400 text-sm opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-100">
+                                        "{genre.description}"
+                                    </p>
                                 </div>
-                            </div>
-                        </motion.div>
-                    ))}
+
+                                {/* Bottom Play Button */}
+                                <div
+                                    onClick={() => playPreview(genre)}
+                                    className="absolute bottom-0 left-0 w-full p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/80 to-transparent cursor-pointer hover:from-black/90"
+                                >
+                                    <div className="flex items-center justify-center gap-2 text-white font-bold text-sm uppercase tracking-widest">
+                                        <Play size={16} className="fill-current" /> Ver Video
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )
+                    })}
                 </div>
             </div>
 
-            {/* YouTube Player Modal */}
+            {/* Video Player Modal */}
             <AnimatePresence>
                 {selectedGenre && (
                     <motion.div
@@ -229,48 +129,59 @@ const Lineup = () => {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.8, opacity: 0 }}
                             transition={{ type: "spring", duration: 0.5 }}
-                            className="relative w-full max-w-4xl bg-dark-800 rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+                            className="relative w-full max-w-4xl bg-gradient-to-br from-gray-900 to-black rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)]"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Close Button */}
                             <button
                                 onClick={closeModal}
-                                className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-2 transition-all hover:scale-110"
+                                className="absolute top-4 right-4 z-20 bg-black/50 hover:bg-black/80 text-white rounded-full p-2 transition-all hover:scale-110 border border-white/10"
                             >
                                 <X size={24} />
                             </button>
 
-                            {/* Genre Info Header */}
-                            <div className={`bg-gradient-to-r ${selectedGenre.color} p-6 text-center`}>
-                                <h3 className="text-3xl font-bold text-white font-display mb-2">
-                                    {selectedGenre.name}
-                                </h3>
-                                <p className="text-white/90 text-sm uppercase tracking-wider">
-                                    {selectedGenre.genre}
-                                </p>
-                            </div>
+                            <div className="flex flex-col md:flex-row">
+                                {/* Video Section */}
+                                <div className="w-full md:w-3/4 bg-black flex items-center justify-center">
+                                    <video
+                                        src={selectedGenre.video_url}
+                                        autoPlay
+                                        controls
+                                        className="w-full max-h-[70vh] object-cover"
+                                        poster="/assets/video-placeholder.jpg"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            // Fallback for demo if file missing
+                                            // e.target.src = "https://media.istockphoto.com/id/1153671239/video/dj-playing-music-at-mixer-closeup.mp4?s=mp4-640x640-is&k=20&c=L_Qd68l_wXW_X9lSgqL6cQk6c6c6c6c6c6c6c6c6"; 
+                                        }}
+                                    >
+                                        Tu navegador no soporta videos HTML5.
+                                    </video>
+                                </div>
 
-                            {/* YouTube Embed */}
-                            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                                <iframe
-                                    id="youtube-player"
-                                    className="absolute top-0 left-0 w-full h-full"
-                                    src={`https://www.youtube.com/embed/${selectedGenre.youtubeId}?start=${selectedGenre.startTime}&enablejsapi=1`}
-                                    title={`${selectedGenre.name} - Preview`}
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                ></iframe>
-                            </div>
+                                {/* Info Sidebar (Desktop) / Footer (Mobile) */}
+                                <div className={`w-full md:w-1/4 bg-gradient-to-b ${selectedGenre.color_gradient} p-8 flex flex-col justify-center relative overflow-hidden`}>
+                                    <div className="absolute inset-0 bg-black/20"></div>
+                                    <div className="relative z-10 text-center md:text-left">
+                                        {(() => {
+                                            const Icon = getIcon(selectedGenre.icon_name);
+                                            return <Icon size={48} className="text-white mb-6 mx-auto md:mx-0 opacity-80" />;
+                                        })()}
+                                        <h3 className="text-2xl md:text-3xl font-bold text-white font-display mb-2 leading-tight">
+                                            {selectedGenre.name}
+                                        </h3>
+                                        <div className="w-12 h-1 bg-white/50 rounded-full mb-4 mx-auto md:mx-0"></div>
+                                        <p className="text-white/90 text-sm uppercase tracking-wider mb-6 font-medium">
+                                            {selectedGenre.genre_subtitle}
+                                        </p>
+                                        <p className="text-white/80 text-sm italic">
+                                            "{selectedGenre.description}"
+                                        </p>
+                                    </div>
 
-                            {/* Footer Info */}
-                            <div className="p-6 bg-black/40">
-                                <p className="text-gray-300 text-center">
-                                    {selectedGenre.description}
-                                </p>
-                                <p className="text-gray-500 text-center text-sm mt-2">
-                                    Preview: {Math.floor(selectedGenre.startTime / 60)}:{(selectedGenre.startTime % 60).toString().padStart(2, '0')} - {Math.floor(selectedGenre.endTime / 60)}:{(selectedGenre.endTime % 60).toString().padStart(2, '0')}
-                                </p>
+                                    {/* Decorative circles */}
+                                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                                </div>
                             </div>
                         </motion.div>
                     </motion.div>

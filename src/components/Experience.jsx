@@ -1,21 +1,21 @@
 import { motion } from 'framer-motion';
-import { Lightbulb, Monitor, Clock } from 'lucide-react';
+import { Lightbulb, Monitor, Clock, Video, Zap, Sparkles, Aperture } from 'lucide-react';
 
 const experiences = [
     {
-        title: "Show de Luces",
-        desc: "Más de 500 cabezas móviles sincronizadas con la música para crear una atmósfera irreal.",
-        icon: <Lightbulb size={32} className="text-neon-blue" />,
+        title: "Plataforma 360°",
+        desc: "Llévate el mejor recuerdo con videos slow-motion giratorios de alta calidad al instante.",
+        icon: <Video size={32} className="text-neon-pink" />,
     },
     {
-        title: "Visuales 360°",
-        desc: "Pantallas gigantes y proyecciones inmersivas que rodean la pista de baile.",
-        icon: <Monitor size={32} className="text-neon-pink" />,
+        title: "Hora Loca LED",
+        desc: "Explosión de energía con Robots LED gigantes, CO2 y cotillón premium futurista.",
+        icon: <Zap size={32} className="text-neon-blue" />,
     },
     {
-        title: "Midnight Surprise",
-        desc: "Un momento épico a la medianoche con pirotecnia digital y confetti storm.",
-        icon: <Clock size={32} className="text-neon-gold" />,
+        title: "Zona Neón & Glitter",
+        desc: "Estaciones de maquillaje flúor y glitter para que brilles toda la noche.",
+        icon: <Sparkles size={32} className="text-neon-gold" />,
     }
 ];
 
@@ -35,7 +35,7 @@ const Experience = () => {
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-purple to-neon-pink">BOOM!</span>
                         </motion.h2>
                         <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-                            No es solo música. Es un viaje sensorial diseñado para estimular todos tus sentidos. Desde el momento en que entras, serás parte de un universo paralelo donde la realidad se mezcla con lo digital.
+                            No es solo una fiesta, es un universo paralelo. Hemos diseñado cada rincón para que vivas una noche inolvidable llena de momentos "instagrammables".
                         </p>
                         <ul className="space-y-6">
                             {experiences.map((item, idx) => (
@@ -60,17 +60,24 @@ const Experience = () => {
                     </div>
 
                     <div className="md:w-1/2 relative w-full">
-                        {/* Visual Representation of Experience - Abstract shapes/Glow */}
-                        <div className="relative w-full aspect-square md:aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl shadow-neon-purple/20">
-                            <div className="absolute inset-0 bg-gradient-to-br from-neon-purple/20 via-black to-neon-blue/20 animate-pulse"></div>
-                            {/* Simulated laser beams */}
-                            <div className="absolute top-0 left-1/4 w-[2px] h-full bg-neon-pink/50 rotate-12 blur-[2px]"></div>
-                            <div className="absolute top-0 right-1/4 w-[2px] h-full bg-neon-blue/50 -rotate-12 blur-[2px]"></div>
+                        {/* 360 Experience Highlight */}
+                        <div className="relative w-full aspect-square md:aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl shadow-neon-pink/20 group cursor-pointer">
+                            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1545128485-c400e7702796?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 group-hover:opacity-50 transition-opacity grayscale hover:grayscale-0 duration-500"></div>
 
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="text-center">
-                                    <span className="text-white/30 font-display text-4xl md:text-5xl font-black uppercase tracking-widest block transform skew-x-12">IMMERSIVE</span>
-                                    <span className="text-white/30 font-display text-4xl md:text-5xl font-black uppercase tracking-widest block transform -skew-x-12">REALITY</span>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <div className="relative mb-6">
+                                    <div className="absolute inset-0 bg-neon-pink blur-xl opacity-50 animate-pulse"></div>
+                                    <Aperture size={64} className="text-white relative z-10 animate-[spin_10s_linear_infinite]" />
+                                </div>
+                                <div className="text-center relative z-10 p-4">
+                                    <span className="text-neon-pink font-display text-4xl md:text-5xl font-black uppercase tracking-widest block mb-2 drop-shadow-[0_0_10px_rgba(255,0,255,0.8)]">
+                                        ZONA 360°
+                                    </span>
+                                    <span className="text-white text-sm tracking-[0.2em] uppercase bg-black/50 px-4 py-2 rounded-full border border-white/20">
+                                        Captura el Momento
+                                    </span>
                                 </div>
                             </div>
                         </div>
