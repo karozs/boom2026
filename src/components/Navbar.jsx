@@ -29,8 +29,20 @@ const Navbar = () => {
     return (
         <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled || isOpen ? 'bg-black/95 backdrop-blur-md py-4 border-b border-white/10' : 'bg-black/50 backdrop-blur-sm py-6'}`}>
             <div className="container mx-auto px-6 flex justify-between items-center">
-                <Link to="/" className="text-2xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue tracking-wider hover:opacity-80 transition-opacity">
-                    THE LAST NIGTH 2025
+                <Link to="/" className="flex flex-col group">
+                    <div className="flex items-center gap-2 mb-[-4px]">
+                        <img
+                            src="https://scontent.flim1-2.fna.fbcdn.net/v/t39.30808-6/600454131_122097729453179831_5236885036250711855_n.jpg?_nc_cat=110&cb2=99be929b-bd9a46d7&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=GT2smus70jYQ7kNvwFpGKm_&_nc_oc=AdkatIza_-qGqtH5ifBDAuQ2gRyXR2oeHJLOeNcBU6l5zu8bIwtJAyoyrAxz-Tg4rAg&_nc_zt=23&_nc_ht=scontent.flim1-2.fna&_nc_gid=Ize0mw5OHt2MOXU_iSB6Lw&oh=00_AflsXS8qBLE-fHZLPr3UXxAqtLhV4nZIX-xdNcg8ZJSoBQ&oe=694CAC8E"
+                            alt="CKR Experiences Logo"
+                            className="h-8 md:h-10 object-contain rounded-full"
+                        />
+                        <span className="text-[10px] md:text-xs text-neon-blue font-bold tracking-[0.2em] uppercase group-hover:text-white transition-colors">
+                            CKR EXPERIENCES PRESENTS
+                        </span>
+                    </div>
+                    <span className="text-2xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue tracking-wider group-hover:opacity-80 transition-opacity">
+                        THE LAST NIGHT 2025
+                    </span>
                 </Link>
 
                 {/* Desktop Menu */}

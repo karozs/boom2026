@@ -77,7 +77,7 @@ const Hero = () => {
                     </div>
 
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-gray-500 mb-2 tracking-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                        THE LAST NIGTH
+                        THE LAST NIGHT
                         <span className="block text-4xl md:text-6xl lg:text-7xl bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue bg-clip-text text-transparent mt-2 filter drop-shadow-[0_0_10px_rgba(255,0,255,0.4)]">
                             2025
                         </span>
