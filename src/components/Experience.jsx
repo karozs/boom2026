@@ -34,12 +34,12 @@ const drinks = [
     { name: "Flor de Caña", desc: "Flor de caña premium + Coca Cola", image: "https://images.rappi.pe/products/237008-1575927253771.png", color: "from-yellow-400 to-amber-600" },
     { name: "Old Time", desc: "Old time + Guarana", image: "https://images.rappi.pe/products/1727659843457_1727659639313_1727659637802.jpg", color: "from-pink-300 to-purple-400" },
     { name: "Mojito Clásico", desc: "Ron blanco, menta fresca y lima", image: "https://cdn.craft.cloud/224393fa-1975-4d80-9067-ada3cb5948ca/assets/detail_Skinny_Mojito_4_2022.jpg", color: "from-green-400 to-emerald-600" },
-    { name: "Gin Tonic", desc: "Gin premium, tónica y botánicos", image: "https://cuberspremium.com/wp-content/uploads/2017/05/gin-tonic-clasico.jpg", color: "from-cyan-300 to-blue-500" },
+    { name: "Gin Tonic", desc: "Gin premium, tónica y botánicos", image: "https://licoreria247.pe/wp-content/uploads/2020/12/Vodka-vs-Gin.jpg.webp", color: "from-cyan-300 to-blue-500" },
     { name: "Margarita", desc: "Tequila, triple sec y limón", image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?q=80&w=1887&auto=format&fit=crop", color: "from-yellow-300 to-lime-500" },
     { name: "Tequila Sunrise", desc: "Tequila, jugo de naranja y granadina", image: "https://exoticotequila.com/wp-content/uploads/2018/03/TEQUILA_SUNRISE_RC.jpg", color: "from-orange-500 to-red-500" },
     { name: "Whisky Sour", desc: "Whisky, limón y jarabe de goma", image: "https://so-sour.com/wp-content/uploads/2024/08/Whisky-Sour.jpg", color: "from-amber-300 to-orange-400" },
     { name: "French 75", desc: "Gin, champagne, limón y azúcar", image: "https://images.ctfassets.net/hs93c4k6gio0/Qh3XDKsj9fkaFAPbIcLXR/43bcbac62e7807e55e7a5c91b822e79b/_images_us-cocktails_French75_0412_2.jpg.jpg", color: "from-pink-300 to-purple-400" },
-    { name: "Calientitos de Maracuyá", desc: "Gin, champagne, limón y azúcar", image: "https://polleriaslagranja.com/wp-content/uploads/2022/10/La-Granja-Real-Food-Chicken-Jarra-de-Maracuya.png", color: "from-pink-300 to-purple-400" },
+    { name: "Calientitos de Maracuyá", desc: "Maracuyá, Limón, Whisky, Azúcar", image: "https://polleriaslagranja.com/wp-content/uploads/2022/10/La-Granja-Real-Food-Chicken-Jarra-de-Maracuya.png", color: "from-pink-300 to-purple-400" },
 ];
 
 const Experience = () => {
