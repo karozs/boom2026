@@ -82,18 +82,18 @@ const AdminDashboard = ({ onLogout }) => {
             let data = [];
 
             if (supabase) {
+                // Optimized query with limit and specific columns
                 const { data: supabaseData, error } = await supabase
                     .from('boom_sales_2026')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+                    .select('id, created_at, name, email, phone, dni, ticket_name, ticket_price, quantity, total_amount, payment_method, payment_proof, status, checked_in, checked_in_at, attendees')
+                    .order('created_at', { ascending: false })
+                    .limit(500); // Limit to last 500 records for performance
 
                 if (error) throw error;
                 data = supabaseData || [];
             } else {
                 console.warn('Supabase not connected. Fetching from localStorage.');
                 data = JSON.parse(localStorage.getItem('boom_sales') || '[]');
-                // Simulate delay
-                await new Promise(resolve => setTimeout(resolve, 500));
             }
 
             // Separate pending and approved sales
@@ -510,9 +510,12 @@ const AdminDashboard = ({ onLogout }) => {
                                     ticket={{
                                         name: selectedSale.ticket_name || selectedSale.ticketName,
                                         id: (selectedSale.ticket_name === 'VIP' || selectedSale.ticketName === 'VIP') ? 'vip' :
-                                            (selectedSale.ticket_name === 'BOOM! EXP' || selectedSale.ticketName === 'BOOM! EXP') ? 'exp' : 'gen'
+                                            ((selectedSale.ticket_name === 'BOOM! EXP' || selectedSale.ticketName === 'BOOM! EXP' || selectedSale.ticket_name === 'BOOM EXP' || selectedSale.ticketName === 'BOOM EXP')) ? 'exp' : 'gen'
                                     }}
-                                    data={{ name: selectedSale.name }}
+                                    data={{
+                                        name: selectedSale.name,
+                                        attendees: selectedSale.attendees
+                                    }}
                                     id={selectedSale.id}
                                 />
                             </div>

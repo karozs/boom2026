@@ -1,21 +1,31 @@
 import { motion } from 'framer-motion';
-import { Lightbulb, Monitor, Clock, Video, Zap, Sparkles, Aperture } from 'lucide-react';
+import { Camera, Zap, Lightbulb, Sparkles, Wine } from 'lucide-react';
 
 const experiences = [
     {
-        title: "Plataforma 360°",
-        desc: "Llévate el mejor recuerdo con videos slow-motion giratorios de alta calidad al instante.",
-        icon: <Video size={32} className="text-neon-pink" />,
+        title: "CUBÍCULO INSTAGRAMEABLE",
+        desc: "Llévate el mejor recuerdo en un espacio diseñado para capturar momentos únicos",
+        icon: <Camera size={32} className="text-neon-pink" />,
     },
     {
-        title: "Hora Loca LED",
-        desc: "Explosión de energía con Robots LED gigantes, CO2 y cotillón premium futurista.",
+        title: "SHOT DE CORTESÍA",
+        desc: "Un shot gratis para empezar la noche.",
         icon: <Zap size={32} className="text-neon-blue" />,
     },
     {
-        title: "Zona Neón & Glitter",
-        desc: "Estaciones de maquillaje flúor y glitter para que brilles toda la noche.",
-        icon: <Sparkles size={32} className="text-neon-gold" />,
+        title: "EXPERIENCIA DE CÓCTELES",
+        desc: "Una selección especial de sabores para descubrir, disfrutar y brindar.",
+        icon: <Wine size={32} className="text-neon-gold" />,
+    },
+    {
+        title: "APAGÓN DE LUCES",
+        desc: "Oscuridad total por un segundo…y la fiesta explota.",
+        icon: <Lightbulb size={32} className="text-neon-purple" />,
+    },
+    {
+        title: "ZONA NEÓN",
+        desc: "Zona de maquillaje para que brilles toda la noche.",
+        icon: <Sparkles size={32} className="text-neon-green" />,
     }
 ];
 
@@ -48,7 +58,7 @@ const Experience = () => {
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-purple to-neon-pink">BOOM!</span>
                         </motion.h2>
                         <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-                            No es solo una fiesta, es un universo paralelo. Hemos diseñado cada rincón para que vivas una noche inolvidable llena de momentos "instagrammables".
+                            No es solo una fiesta, es otra experiencia. Pensamos cada detalle para que disfrutes al máximo y te lleves recuerdos perfectos.
                         </p>
                         <ul className="space-y-6">
                             {experiences.map((item, idx) => (
@@ -82,7 +92,7 @@ const Experience = () => {
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
                                 <div className="relative mb-6">
                                     <div className="absolute inset-0 bg-neon-pink blur-xl opacity-50 animate-pulse"></div>
-                                    <Aperture size={64} className="text-white relative z-10 animate-[spin_10s_linear_infinite]" />
+                                    <Camera size={64} className="text-white relative z-10 animate-[spin_10s_linear_infinite]" />
                                 </div>
                                 <div className="text-center relative z-10 p-4">
                                     <span className="text-neon-pink font-display text-4xl md:text-5xl font-black uppercase tracking-widest block mb-2 drop-shadow-[0_0_10px_rgba(255,0,255,0.8)]">
@@ -105,7 +115,7 @@ const Experience = () => {
                     <div className="text-center mb-16">
                         <span className="text-neon-blue tracking-[0.2em] font-bold text-sm uppercase mb-2 block">Premium Drinks</span>
                         <h3 className="text-4xl md:text-5xl font-display font-bold text-white">
-                            BARRA <span className="text-neon-pink">LIBRE & EXCLUSIVA</span>
+                            BARRA <span className="text-neon-pink">EXCLUSIVA</span>
                         </h3>
                     </div>
 

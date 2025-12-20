@@ -5,7 +5,7 @@ const TicketCard = ({ ticket, data, id }) => {
     const getGradient = () => {
         switch (ticket.id || ticket.ticket_id) { // Handle flexibility in data structure
             case 'vip': return 'from-neon-pink/20 to-purple-900/40 border-neon-pink';
-            case 'exp': return 'from-amber-500/20 to-yellow-900/40 border-neon-gold';
+            case 'exp': return 'from-amber-500/30 to-yellow-600/50 border-neon-gold';
             default: return 'from-white/10 to-gray-900/40 border-white/20';
         }
     };
@@ -20,6 +20,20 @@ const TicketCard = ({ ticket, data, id }) => {
 
     const getTicketName = () => {
         return ticket.name || ticket.ticket_name || 'ENTRADA';
+    };
+
+    const formatAttendees = (attendeesString) => {
+        if (!attendeesString) return null;
+
+        const names = attendeesString.split(',').map(n => n.trim()).filter(n => n);
+        return names.map(fullName => {
+            const parts = fullName.trim().split(' ');
+            if (parts.length === 1) return parts[0];
+            // Take first name + initial of last name
+            const firstName = parts[0];
+            const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+            return `${firstName} ${lastInitial}.`;
+        }).join(', ');
     };
 
     return (
@@ -60,7 +74,9 @@ const TicketCard = ({ ticket, data, id }) => {
                             {data.attendees && (
                                 <div className="mt-2 text-left">
                                     <p className="text-[10px] text-gray-500 uppercase">Group Members</p>
-                                    <p className="text-xs text-gray-300 break-words font-medium">{data.attendees}</p>
+                                    <p className="text-xs text-gray-300 break-words font-medium leading-snug">
+                                        {formatAttendees(data.attendees)}
+                                    </p>
                                 </div>
                             )}
                         </div>

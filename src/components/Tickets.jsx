@@ -27,11 +27,11 @@ const tickets = [
         price: 50,
         features: [
             { text: "Acceso Libre (Grupo)", highlight: false },
-            { text: "50% OFF 1ra Botella (Flor de Caña) o Cóctel", highlight: true },
+            { text: "50% OFF 1ra Botella (Flor de Caña) o Cóctel Individual", highlight: true },
             { text: "Acceso al cubículo instagrameable", highlight: false },
             { text: "Pulseras", highlight: false },
             { text: "Shot de cortesía", highlight: false },
-            { text: "Accesorios temáticos", highlight: false }
+            { text: "Accesorios temáticos de fin de año", highlight: false }
         ],
         recommended: true,
         color: "border-neon-pink shadow-[0_0_20px_rgba(255,0,255,0.2)] hover:shadow-[0_0_30px_rgba(255,0,255,0.4)]"
@@ -43,11 +43,11 @@ const tickets = [
         price: 70,
         features: [
             { text: "Acceso Libre", highlight: false },
-            { text: "Botella de Cortesía (Flor de Caña) o Cóctel + Shot French 75", highlight: true },
+            { text: "Botella de Cortesía (Flor de Caña) o Cóctel individual + Shot individual de French 75", highlight: true },
             { text: "Acceso al cubículo instagrameable", highlight: false },
             { text: "Pulseras", highlight: false },
             { text: "Shot de cortesía", highlight: false },
-            { text: "Accesorios temáticos", highlight: false }
+            { text: "Accesorios temáticos de fin de año", highlight: false }
         ],
         recommended: false,
         color: "border-neon-gold hover:border-gold-400"
@@ -471,19 +471,6 @@ const CheckoutModal = ({ ticket, onClose }) => {
                                         </>
                                     )}
                                 </p>
-                            </div>
-
-                            {/* Ticket Preview */}
-                            <div className="mb-6">
-                                <p className="text-white font-bold mb-4">Vista Previa de tu Entrada:</p>
-                                <TicketCard
-                                    ticket={ticket}
-                                    data={{
-                                        name: formData.name,
-                                        attendees: attendees.filter(a => a.trim() !== '').join(', ')
-                                    }}
-                                    id={transactionId}
-                                />
                             </div>
                         </motion.div>
 
