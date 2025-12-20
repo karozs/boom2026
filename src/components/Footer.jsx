@@ -14,7 +14,7 @@ const Footer = () => {
                 <div className="flex flex-col md:flex-row justify-between items-center mb-12">
                     <div className="mb-8 md:mb-0 text-center md:text-left">
                         <h2 className="text-3xl font-display font-bold text-white mb-2 tracking-wider">THE LAST NIGHT 2025</h2>
-                        <p className="text-gray-500">El futuro comienza hoy. <br /> 31 de Diciembre · Ciudad Pampas Tayacaja Huancavelica</p>
+                        <p className="text-gray-500">El futuro comienza hoy. <br /> 31 de Diciembre · Ciudad Pampas - Huancavelica</p>
                     </div>
 
                     <div className="flex gap-6">

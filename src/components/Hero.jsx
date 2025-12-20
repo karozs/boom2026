@@ -17,8 +17,8 @@ const Hero = () => {
     }, []);
 
     function calculateTimeLeft() {
-        // Target: Jan 31, 2026 22:00:00
-        const difference = +new Date("2026-01-31T22:00:00") - +new Date();
+        // Target: Dec 31, 2025 22:00:00
+        const difference = +new Date("2025-12-31T22:00:00") - +new Date();
         let timeLeft = { días: 0, horas: 0, minutos: 0, seg: 0 };
 
         if (difference > 0) {
@@ -73,19 +73,20 @@ const Hero = () => {
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6 max-w-full overflow-hidden">
                         <Sparkles className="text-neon-gold w-4 h-4 shrink-0" />
-                        <span className="text-neon-gold text-sm font-semibold tracking-wider uppercase truncate">31 de Enero · 10 PM · Pampas, Tayacaja - Huancavelica</span>
+                        <span className="text-neon-gold text-sm font-semibold tracking-wider uppercase truncate">31 de Diciembre · 10 PM · Pampas - Huancavelica</span>
                     </div>
 
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-gray-500 mb-2 tracking-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
                         THE LAST NIGHT
-                        <span className="block text-4xl md:text-6xl lg:text-7xl bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue bg-clip-text text-transparent mt-2 filter drop-shadow-[0_0_10px_rgba(255,0,255,0.4)]">
+                        <span className="block text-4xl md:text-6xl lg:text-7xl bg-gradient-to-r from-neon-blue via-cyan-400 to-blue-600 bg-clip-text text-transparent mt-2 filter drop-shadow-[0_0_10px_rgba(0,240,255,0.4)]">
                             2025
                         </span>
                     </h1>
 
                     <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
-                        El inicio del año que lo cambia todo. <br />
-                        <span className="text-white font-medium">Una noche de energía, luz y música explosiva.</span>
+                        Aquí termina el año, aquí empieza tu nueva vida.
+                        <br className="hidden md:block" />
+                        <span className="text-white font-medium block mt-2">Una noche de energía, luz y música explosiva.</span>
                     </p>
 
                     <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-16">

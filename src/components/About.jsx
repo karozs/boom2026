@@ -33,9 +33,9 @@ const About = () => {
                         SOBRE EL <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-green to-neon-blue">EVENTO</span>
                     </motion.h2>
                     <p className="text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">
-                        THE LAST NIGTH 2025 no es solo una fiesta. Es la celebración que define tu año.
+                        THE LAST NIGHT 2025 no es solo una fiesta. Es la celebración que define tu año.
                         Una fusión de tecnología, arte y música en una ubicación única transformada en un universo neón.
-                        Prepárate para vibrar el <span className="text-white font-bold">31 de Enero</span>.
+                        Prepárate para vibrar el <span className="text-white font-bold">31 de Diciembre</span>.
                     </p>
                 </div>
 

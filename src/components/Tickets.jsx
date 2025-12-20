@@ -9,28 +9,52 @@ const tickets = [
     {
         id: "gen",
         name: "GENERAL",
-        price: 15,
-        features: ["Acceso al evento", "Zona General", "Barra pagada", "Experiencia visual 360", "Acceso a Food Court"],
+        subtitle: "(SI VIENES SOLANO)",
+        price: 0,
+        features: [
+            { text: "Acceso Libre", highlight: false },
+            { text: "Acceso al cubículo instagrameable", highlight: false },
+            { text: "Accesorios temáticos de fin de año", highlight: false },
+            { text: "Shot de cortesía", highlight: false },
+        ],
         recommended: false,
         color: "border-white/10 hover:border-white/30"
     },
     {
         id: "vip",
         name: "VIP",
-        price: 20,
-        features: ["Acceso Fast Pass", "Zona VIP Elevada", "2 Tragos de cortesía", "Baños exclusivos", "Vista preferencial al escenario"],
+        subtitle: "(MÁX 5 PERSONAS)",
+        price: 50,
+        features: [
+            { text: "Acceso Libre (Grupo)", highlight: false },
+            { text: "50% OFF 1ra Botella (Flor de Caña) o Cóctel", highlight: true },
+            { text: "Acceso al cubículo instagrameable", highlight: false },
+            { text: "Pulseras", highlight: false },
+            { text: "Shot de cortesía", highlight: false },
+            { text: "Accesorios temáticos", highlight: false }
+        ],
         recommended: true,
         color: "border-neon-pink shadow-[0_0_20px_rgba(255,0,255,0.2)] hover:shadow-[0_0_30px_rgba(255,0,255,0.4)]"
     },
     {
         id: "exp",
-        name: "BOOM! EXP",
-        price: 50,
-        features: ["All Access sin filas", "Backstage Lounge", "Barra Libre Premium", "Regalo Exclusivo", "Acceso a After Party"],
+        name: "BOOM EXP",
+        subtitle: "(MÁX 5 PERSONAS)",
+        price: 70,
+        features: [
+            { text: "Acceso Libre", highlight: false },
+            { text: "Botella de Cortesía (Flor de Caña) o Cóctel + Shot French 75", highlight: true },
+            { text: "Acceso al cubículo instagrameable", highlight: false },
+            { text: "Pulseras", highlight: false },
+            { text: "Shot de cortesía", highlight: false },
+            { text: "Accesorios temáticos", highlight: false }
+        ],
         recommended: false,
         color: "border-neon-gold hover:border-gold-400"
     }
 ];
+
+
 
 
 
@@ -49,8 +73,16 @@ const CheckoutModal = ({ ticket, onClose }) => {
     const [paymentProofPreview, setPaymentProofPreview] = useState(null); // Preview URL
     const [transactionId, setTransactionId] = useState('');
 
+    const [attendees, setAttendees] = useState(['', '', '', '']);
+
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleAttendeeChange = (index, value) => {
+        const newAttendees = [...attendees];
+        newAttendees[index] = value;
+        setAttendees(newAttendees);
     };
 
     const handleImageUpload = (e) => {
@@ -90,6 +122,7 @@ const CheckoutModal = ({ ticket, onClose }) => {
 
         try {
             let newId = '';
+            const attendeesList = attendees.filter(a => a.trim() !== '').join(', ');
 
             if (supabase) {
                 // Insert into Supabase
@@ -107,7 +140,8 @@ const CheckoutModal = ({ ticket, onClose }) => {
                             total_amount: ticket.price * quantity,
                             payment_method: paymentMethod,
                             payment_proof: paymentProof,
-                            status: 'pending' // Always pending until admin approves
+                            status: 'pending', // Always pending until admin approves
+                            attendees: attendeesList
                         }
                     ])
                     .select(); // Ensure we select the return data
@@ -132,7 +166,8 @@ const CheckoutModal = ({ ticket, onClose }) => {
                     total_amount: ticket.price * quantity,
                     payment_method: paymentMethod,
                     payment_proof: paymentProof,
-                    status: 'pending'
+                    status: 'pending',
+                    attendees: attendeesList
                 };
                 sales.unshift(newSale); // Add to beginning
                 localStorage.setItem('boom_sales', JSON.stringify(sales));
@@ -166,7 +201,7 @@ const CheckoutModal = ({ ticket, onClose }) => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-dark-900 border border-white/20 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative"
+                className="bg-dark-900 border border-white/20 rounded-2xl w-full max-w-lg overflow-y-auto max-h-[90vh] shadow-2xl relative"
             >
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white z-10">
                     <X size={24} />
@@ -208,7 +243,7 @@ const CheckoutModal = ({ ticket, onClose }) => {
                         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setStep(2.5); }}>
                             <div className="relative">
                                 <User className="absolute left-3 top-3 text-gray-500" size={18} />
-                                <input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Nombre Completo" className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 pr-4 text-white focus:border-neon-blue outline-none transition-colors" />
+                                <input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Nombre Completo (Titular)" className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 pr-4 text-white focus:border-neon-blue outline-none transition-colors" />
                             </div>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-3 text-gray-500" size={18} />
@@ -223,6 +258,25 @@ const CheckoutModal = ({ ticket, onClose }) => {
                                     <input required name="dni" value={formData.dni} onChange={handleInputChange} placeholder="DNI / Pasaporte" className="w-full bg-black border border-white/20 rounded-lg py-3 px-4 text-white focus:border-neon-blue outline-none transition-colors" />
                                 </div>
                             </div>
+
+                            {/* Group Member Fields for VIP and EXP */}
+                            {(ticket.id === 'vip' || ticket.id === 'exp') && (
+                                <div className="mt-4 pt-4 border-t border-white/10">
+                                    <p className="text-neon-blue font-bold text-sm mb-3">Integrantes del Grupo (Opcional):</p>
+                                    <div className="space-y-3">
+                                        {[0, 1, 2, 3].map((index) => (
+                                            <div key={index} className="relative">
+                                                <input
+                                                    value={attendees[index]}
+                                                    onChange={(e) => handleAttendeeChange(index, e.target.value)}
+                                                    placeholder={`Nombre del integrante #${index + 1}`}
+                                                    className="w-full bg-black/50 border border-white/10 rounded-lg py-2 px-4 text-sm text-white focus:border-neon-blue outline-none transition-colors"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             <p className="text-xs text-gray-500 mt-2">
                                 {supabase ?
@@ -455,7 +509,7 @@ const Tickets = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-4xl md:text-6xl font-display font-bold text-white mb-4"
                     >
-                        ENTRADAS
+                        PROMOCIONES
                     </motion.h2>
                     <p className="text-gray-400 text-lg">Precios en moneda local (S/). ¡Asegura tu lugar!</p>
                 </div>
@@ -477,18 +531,21 @@ const Tickets = () => {
                                 </div>
                             )}
 
-                            <h3 className="text-2xl font-display font-bold text-white mb-2">{ticket.name}</h3>
+                            <h3 className="text-2xl font-display font-bold text-white mb-1">{ticket.name}</h3>
+                            {ticket.subtitle && <p className="text-neon-blue text-sm font-bold mb-4 tracking-wider">{ticket.subtitle}</p>}
                             <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-6">
-                                S/ {ticket.price}
+                                {ticket.price === 0 ? "FREE" : `S/ ${ticket.price}`}
                             </div>
 
                             <ul className="mb-8 space-y-4 flex-grow">
                                 {ticket.features.map((feat, i) => (
                                     <li key={i} className="flex items-center gap-3 text-gray-300">
-                                        <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                                            <Check className="w-3 h-3 text-neon-green" />
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${feat.highlight ? 'bg-yellow-400/20' : 'bg-white/10'}`}>
+                                            <Check className={`w-3 h-3 ${feat.highlight ? 'text-yellow-400' : 'text-neon-green'}`} />
                                         </div>
-                                        <span className="text-sm">{feat}</span>
+                                        <span className={`text-sm ${feat.highlight ? 'text-yellow-400 font-bold tracking-wide' : ''}`}>
+                                            {feat.text}
+                                        </span>
                                     </li>
                                 ))}
                             </ul>
