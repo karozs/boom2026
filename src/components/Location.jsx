@@ -13,7 +13,7 @@ const Location = () => {
                         style={{ border: 0, filter: 'grayscale(100%) invert(90%)' }}
                         loading="lazy"
                         allowFullScreen
-                        src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3901.815967923455!2d-74.8663727!3d-12.4013127!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTLCsDI0JzA0LjciUyA3NMKwNTEnNTguOSJX!5e0!3m2!1ses!2spe!4v1703010000000!5m2!1ses!2spe"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15576.234!2d-74.8663!3d-12.4013!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x910d4c8c8c8c8c8d%3A0x1234567890abcdef!2sPampas%2C%20Tayacaja%2C%20Huancavelica!5e0!3m2!1ses!2spe!4v1703010000000!5m2!1ses!2spe"
                     ></iframe>
 
                     <div className="absolute bottom-6 left-6 right-6 md:auto md:left-6 md:w-auto">
@@ -22,12 +22,12 @@ const Location = () => {
                                 <MapPin className="text-neon-pink w-6 h-6" />
                                 <div>
                                     <h3 className="text-xl font-bold text-white">Local: EL PAMPINO</h3>
-                                    <p className="text-gray-400 text-sm">Ver en Google Maps</p>
+                                    <p className="text-gray-400 text-sm">Pampas, Tayacaja - Huancavelica</p>
                                 </div>
                             </div>
 
                             <a
-                                href="https://www.google.com/maps?q=-12.4013127,-74.8663727"
+                                href="https://www.google.com/maps/search/Pampas+Tayacaja+Huancavelica+Peru"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-2 w-full py-2 bg-white/10 hover:bg-neon-pink/20 text-white rounded-lg text-sm font-medium transition-colors border border-white/5 hover:border-neon-pink/50 text-center block"

@@ -73,7 +73,7 @@ const Hero = () => {
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6 max-w-full overflow-hidden">
                         <Sparkles className="text-neon-gold w-4 h-4 shrink-0" />
-                        <span className="text-neon-gold text-sm font-semibold tracking-wider uppercase truncate">31 de Enero · 10 PM · Ciudad de las Artes</span>
+                        <span className="text-neon-gold text-sm font-semibold tracking-wider uppercase truncate">31 de Enero · 10 PM · Pampas, Tayacaja - Huancavelica</span>
                     </div>
 
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-gray-500 mb-2 tracking-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
