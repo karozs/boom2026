@@ -472,6 +472,19 @@ const CheckoutModal = ({ ticket, onClose }) => {
                                     )}
                                 </p>
                             </div>
+
+                            {/* Ticket Preview */}
+                            <div className="mb-6">
+                                <p className="text-white font-bold mb-4">Vista Previa de tu Entrada:</p>
+                                <TicketCard
+                                    ticket={ticket}
+                                    data={{
+                                        name: formData.name,
+                                        attendees: attendees.filter(a => a.trim() !== '').join(', ')
+                                    }}
+                                    id={transactionId}
+                                />
+                            </div>
                         </motion.div>
 
                         <div className="space-y-3 w-full">

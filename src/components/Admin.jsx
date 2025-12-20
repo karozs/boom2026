@@ -378,6 +378,7 @@ const AdminDashboard = ({ onLogout }) => {
                                         <th className="p-4 text-right">Total</th>
                                         <th className="p-4 text-center">Pago</th>
                                         {activeTab === 'pending' && <th className="p-4 text-center">Captura</th>}
+                                        {activeTab === 'approved' && <th className="p-4 text-center">Estado</th>}
                                         <th className="p-4 text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -402,7 +403,7 @@ const AdminDashboard = ({ onLogout }) => {
                                                 </td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold border ${(sale.ticket_name || sale.ticketName) === 'VIP' ? 'border-neon-pink text-neon-pink' :
-                                                        (sale.ticket_name || sale.ticketName) === 'BOOM! EXP' ? 'border-neon-gold text-neon-gold' :
+                                                        ((sale.ticket_name || sale.ticketName) === 'BOOM! EXP' || (sale.ticket_name || sale.ticketName) === 'BOOM EXP') ? 'border-neon-gold text-neon-gold' :
                                                             'border-gray-500 text-gray-300'
                                                         }`}>
                                                         {sale.ticket_name || sale.ticketName}
@@ -425,6 +426,20 @@ const AdminDashboard = ({ onLogout }) => {
                                                             </button>
                                                         ) : (
                                                             <span className="text-gray-600">-</span>
+                                                        )}
+                                                    </td>
+                                                )}
+
+                                                {activeTab === 'approved' && (
+                                                    <td className="p-4 text-center">
+                                                        {sale.checked_in ? (
+                                                            <span className="px-2 py-1 rounded text-xs font-bold bg-red-500/20 text-red-500 border border-red-500/50">
+                                                                USADO
+                                                            </span>
+                                                        ) : (
+                                                            <span className="px-2 py-1 rounded text-xs font-bold bg-green-500/20 text-green-500 border border-green-500/50">
+                                                                DISPONIBLE
+                                                            </span>
                                                         )}
                                                     </td>
                                                 )}

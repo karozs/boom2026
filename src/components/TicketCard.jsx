@@ -53,9 +53,16 @@ const TicketCard = ({ ticket, data, id }) => {
                 <div className="space-y-4 mb-6">
                     <div className="flex justify-between">
                         <div className="w-full"> {/* Allow full width for name */}
-                            <p className="text-[10px] text-gray-500 uppercase">Attendee</p>
+                            <p className="text-[10px] text-gray-500 uppercase">Principal Attendee</p>
                             {/* REMOVED truncate max-w-[150px] to fix user issue */}
                             <p className="text-sm font-bold text-white break-words leading-tight">{data.name}</p>
+
+                            {data.attendees && (
+                                <div className="mt-2 text-left">
+                                    <p className="text-[10px] text-gray-500 uppercase">Group Members</p>
+                                    <p className="text-xs text-gray-300 break-words font-medium">{data.attendees}</p>
+                                </div>
+                            )}
                         </div>
                         <div className="text-right min-w-[60px]">
                             <p className="text-[10px] text-gray-500 uppercase">Date</p>
