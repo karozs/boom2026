@@ -13,8 +13,8 @@ const Footer = () => {
             <div className="container mx-auto px-6 relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-12">
                     <div className="mb-8 md:mb-0 text-center md:text-left">
-                        <h2 className="text-3xl font-display font-bold text-white mb-2 tracking-wider">BOOM! 2026</h2>
-                        <p className="text-gray-500">El futuro comienza hoy. <br /> 31 de Enero · Ciudad de las Artes</p>
+                        <h2 className="text-3xl font-display font-bold text-white mb-2 tracking-wider">THE LAST NIGTH 2025</h2>
+                        <p className="text-gray-500">El futuro comienza hoy. <br /> 31 de Enero · Ciudad Pampas Tayacaja Huancavelica</p>
                     </div>
 
                     <div className="flex gap-6">
@@ -32,7 +32,7 @@ const Footer = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-8">
                     <p className="text-gray-600 text-sm mb-4 md:mb-0">
-                        © 2025 BOOM! Events. Todos los derechos reservados.
+                        © 2025 THE LAST NIGTH Events. Todos los derechos reservados.
                     </p>
 
                     <div className="flex items-center gap-6">

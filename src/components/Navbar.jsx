@@ -30,7 +30,7 @@ const Navbar = () => {
         <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled || isOpen ? 'bg-black/95 backdrop-blur-md py-4 border-b border-white/10' : 'bg-black/50 backdrop-blur-sm py-6'}`}>
             <div className="container mx-auto px-6 flex justify-between items-center">
                 <Link to="/" className="text-2xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-pink via-neon-purple to-neon-blue tracking-wider hover:opacity-80 transition-opacity">
-                    BOOM! 2026
+                    THE LAST NIGTH 2025
                 </Link>
 
                 {/* Desktop Menu */}
