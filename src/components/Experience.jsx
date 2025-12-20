@@ -20,9 +20,9 @@ const experiences = [
 ];
 
 const drinks = [
-    { name: "Cuba Libre Premium", desc: "Flor de Caña Gran Reserva + Coca Cola", image: "https://img.freepik.com/fotos-premium/coctel-cuba-libre-vaso-highball-hielo-cascara-lima-paja-limas-frescas-sobre-fondo-negro-mesa_157173-3330.jpg", color: "from-amber-500 to-red-600" },
-    { name: "Flor de Caña", desc: "Johnnie Walker Black Label en las Rocas", image: "https://images.rappi.pe/products/237008-1575927253771.png", color: "from-yellow-400 to-amber-600" },
-    { name: "Old Time", desc: "Gin, champagne, limón y azúcar", image: "https://images.rappi.pe/products/1727659843457_1727659639313_1727659637802.jpg", color: "from-pink-300 to-purple-400" },
+    { name: "Cuba Libre Premium", desc: "Ron + Coca Cola + limon", image: "https://img.freepik.com/fotos-premium/coctel-cuba-libre-vaso-highball-hielo-cascara-lima-paja-limas-frescas-sobre-fondo-negro-mesa_157173-3330.jpg", color: "from-amber-500 to-red-600" },
+    { name: "Flor de Caña", desc: "Flor de caña premium + Coca Cola", image: "https://images.rappi.pe/products/237008-1575927253771.png", color: "from-yellow-400 to-amber-600" },
+    { name: "Old Time", desc: "Old time + Guarana", image: "https://images.rappi.pe/products/1727659843457_1727659639313_1727659637802.jpg", color: "from-pink-300 to-purple-400" },
     { name: "Mojito Clásico", desc: "Ron blanco, menta fresca y lima", image: "https://cdn.craft.cloud/224393fa-1975-4d80-9067-ada3cb5948ca/assets/detail_Skinny_Mojito_4_2022.jpg", color: "from-green-400 to-emerald-600" },
     { name: "Gin Tonic", desc: "Gin premium, tónica y botánicos", image: "https://cuberspremium.com/wp-content/uploads/2017/05/gin-tonic-clasico.jpg", color: "from-cyan-300 to-blue-500" },
     { name: "Margarita", desc: "Tequila, triple sec y limón", image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?q=80&w=1887&auto=format&fit=crop", color: "from-yellow-300 to-lime-500" },
