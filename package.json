@@ -14,9 +14,11 @@
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
+    "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-qr-code": "^2.0.18",
     "react-router-dom": "^7.11.0",
     "tailwind-merge": "^3.4.0"
   },

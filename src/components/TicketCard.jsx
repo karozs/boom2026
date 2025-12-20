@@ -1,4 +1,5 @@
 import React from 'react';
+import QRCode from 'react-qr-code';
 
 const TicketCard = ({ ticket, data, id }) => {
     const getGradient = () => {
@@ -73,11 +74,18 @@ const TicketCard = ({ ticket, data, id }) => {
                     </div>
                 </div>
 
-                {/* QR Code Simulation */}
+                {/* QR Code */}
                 <div className="bg-white p-2 rounded-xl mx-auto w-32 h-32 flex items-center justify-center mb-4 border border-gray-200">
-                    <div className="w-full h-full border-4 border-black border-dashed flex items-center justify-center">
-                        <span className="font-display font-bold text-black text-xs text-center">SCAN ME<br />ENTRY</span>
-                    </div>
+                    <QRCode
+                        value={JSON.stringify({
+                            id: id,
+                            name: data.name,
+                            type: getTicketName(),
+                            valid: true
+                        })}
+                        size={112}
+                        level="M" // Medium error correction
+                    />
                 </div>
 
                 <p className="text-[10px] text-center text-gray-600">Present this digital ticket at the entrance.</p>

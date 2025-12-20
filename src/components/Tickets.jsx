@@ -35,7 +35,7 @@ const tickets = [
 
 
 const CheckoutModal = ({ ticket, onClose }) => {
-    // Steps: 1: Selection, 2: Form, 3: Processing, 4: Success
+    // Steps: 1: Selection, 2: Form, 2.5: Payment Method, 3: Processing, 4: Success/Pending
     const [step, setStep] = useState(1);
     const [quantity, setQuantity] = useState(1);
     const [formData, setFormData] = useState({
@@ -44,13 +44,48 @@ const CheckoutModal = ({ ticket, onClose }) => {
         phone: '',
         dni: ''
     });
+    const [paymentMethod, setPaymentMethod] = useState('yape'); // 'yape' or 'efectivo'
+    const [paymentProof, setPaymentProof] = useState(null); // Base64 image
+    const [paymentProofPreview, setPaymentProofPreview] = useState(null); // Preview URL
     const [transactionId, setTransactionId] = useState('');
 
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor selecciona una imagen válida');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('La imagen es muy grande. Máximo 5MB');
+                return;
+            }
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPaymentProof(reader.result); // Base64
+                setPaymentProofPreview(reader.result); // For preview
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleBuy = async () => {
+        // Validate payment proof for Yape
+        if (paymentMethod === 'yape' && !paymentProof) {
+            alert('Por favor sube la captura de tu pago por Yape');
+            setStep(2.5);
+            return;
+        }
+
         setStep(3);
 
         try {
@@ -70,7 +105,9 @@ const CheckoutModal = ({ ticket, onClose }) => {
                             ticket_price: ticket.price,
                             quantity: quantity,
                             total_amount: ticket.price * quantity,
-                            status: 'paid'
+                            payment_method: paymentMethod,
+                            payment_proof: paymentProof,
+                            status: 'pending' // Always pending until admin approves
                         }
                     ])
                     .select(); // Ensure we select the return data
@@ -93,7 +130,9 @@ const CheckoutModal = ({ ticket, onClose }) => {
                     ticket_price: ticket.price,
                     quantity: quantity,
                     total_amount: ticket.price * quantity,
-                    status: 'paid'
+                    payment_method: paymentMethod,
+                    payment_proof: paymentProof,
+                    status: 'pending'
                 };
                 sales.unshift(newSale); // Add to beginning
                 localStorage.setItem('boom_sales', JSON.stringify(sales));
@@ -106,17 +145,13 @@ const CheckoutModal = ({ ticket, onClose }) => {
 
             setTimeout(() => {
                 setStep(4);
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
+                // No confetti for pending orders
             }, 1000);
 
         } catch (err) {
             console.error('Error saving sale:', err);
             alert(`Error: ${err.message || 'Hubo un error al procesar el registro.'}`);
-            setStep(2);
+            setStep(2.5);
         }
     };
 
@@ -170,7 +205,7 @@ const CheckoutModal = ({ ticket, onClose }) => {
                 {step === 2 && (
                     <div className="p-6">
                         <h3 className="text-2xl font-display font-bold text-white mb-6">Tus Datos</h3>
-                        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleBuy(); }}>
+                        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setStep(2.5); }}>
                             <div className="relative">
                                 <User className="absolute left-3 top-3 text-gray-500" size={18} />
                                 <input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Nombre Completo" className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 pr-4 text-white focus:border-neon-blue outline-none transition-colors" />
@@ -196,13 +231,120 @@ const CheckoutModal = ({ ticket, onClose }) => {
                                 }
                             </p>
 
-                            <button type="submit" className="w-full mt-6 py-3 bg-neon-green text-black font-bold rounded-xl hover:bg-green-400 transition-colors shadow-[0_0_15px_rgba(57,255,20,0.4)] flex justify-center items-center gap-2">
-                                <CreditCard size={20} /> Pagar S/ {ticket.price * quantity}
+                            <button type="submit" className="w-full mt-6 py-3 bg-neon-pink text-white font-bold rounded-xl hover:bg-neon-purple transition-colors">
+                                Continuar al Pago
                             </button>
                             <button onClick={() => setStep(1)} type="button" className="w-full mt-2 py-2 text-gray-400 hover:text-white text-sm">
                                 Volver
                             </button>
                         </form>
+                    </div>
+                )}
+
+                {step === 2.5 && (
+                    <div className="p-6">
+                        <h3 className="text-2xl font-display font-bold text-white mb-6">Método de Pago</h3>
+
+                        {/* Payment Method Selection */}
+                        <div className="space-y-4 mb-6">
+                            <label className="block">
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="yape"
+                                    checked={paymentMethod === 'yape'}
+                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                    className="hidden peer"
+                                />
+                                <div className="flex items-center gap-4 p-4 border-2 border-white/20 rounded-xl cursor-pointer peer-checked:border-neon-purple peer-checked:bg-neon-purple/10 transition-all hover:border-white/40">
+                                    <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">Y</div>
+                                    <div className="flex-1">
+                                        <h4 className="text-white font-bold">Yape</h4>
+                                        <p className="text-gray-400 text-sm">Pago instantáneo con captura</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label className="block">
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="efectivo"
+                                    checked={paymentMethod === 'efectivo'}
+                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                    className="hidden peer"
+                                />
+                                <div className="flex items-center gap-4 p-4 border-2 border-white/20 rounded-xl cursor-pointer peer-checked:border-neon-green peer-checked:bg-neon-green/10 transition-all hover:border-white/40">
+                                    <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">S/</div>
+                                    <div className="flex-1">
+                                        <h4 className="text-white font-bold">Efectivo</h4>
+                                        <p className="text-gray-400 text-sm">Pago en persona</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        {/* Yape Instructions and Upload */}
+                        {paymentMethod === 'yape' && (
+                            <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-6">
+                                <h4 className="text-white font-bold mb-2 flex items-center gap-2">
+                                    <CreditCard size={18} />
+                                    Instrucciones de Pago
+                                </h4>
+                                <p className="text-gray-300 text-sm mb-3">
+                                    1. Realiza el pago de <span className="font-bold text-neon-green">S/ {ticket.price * quantity}</span> al número:<br />
+                                    <span className="font-bold text-white text-lg">977 163 359</span>
+                                </p>
+                                <p className="text-gray-300 text-sm mb-4">
+                                    2. Sube la captura de pantalla de tu pago:
+                                </p>
+
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    className="hidden"
+                                    id="payment-proof-upload"
+                                />
+                                <label
+                                    htmlFor="payment-proof-upload"
+                                    className="block w-full py-3 bg-white/10 border-2 border-dashed border-white/30 rounded-xl text-center cursor-pointer hover:bg-white/20 hover:border-white/50 transition-all"
+                                >
+                                    {paymentProofPreview ? (
+                                        <div className="space-y-2">
+                                            <img src={paymentProofPreview} alt="Preview" className="max-h-40 mx-auto rounded-lg" />
+                                            <p className="text-neon-green text-sm font-bold">✓ Captura cargada - Click para cambiar</p>
+                                        </div>
+                                    ) : (
+                                        <div className="text-gray-300">
+                                            <p className="font-bold">📸 Click para subir captura</p>
+                                            <p className="text-xs text-gray-500 mt-1">PNG, JPG - Máx 5MB</p>
+                                        </div>
+                                    )}
+                                </label>
+                            </div>
+                        )}
+
+                        {/* Efectivo Instructions */}
+                        {paymentMethod === 'efectivo' && (
+                            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
+                                <h4 className="text-white font-bold mb-2">📍 Pago en Efectivo</h4>
+                                <p className="text-gray-300 text-sm">
+                                    Tu orden quedará pendiente hasta que realices el pago en persona.
+                                    Te contactaremos para coordinar la entrega y pago de <span className="font-bold text-neon-green">S/ {ticket.price * quantity}</span>.
+                                </p>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleBuy}
+                            className="w-full py-3 bg-neon-green text-black font-bold rounded-xl hover:bg-green-400 transition-colors shadow-[0_0_15px_rgba(57,255,20,0.4)] flex justify-center items-center gap-2"
+                        >
+                            <CreditCard size={20} /> Confirmar Orden - S/ {ticket.price * quantity}
+                        </button>
+                        <button onClick={() => setStep(2)} type="button" className="w-full mt-2 py-2 text-gray-400 hover:text-white text-sm">
+                            Volver
+                        </button>
                     </div>
                 )}
 
@@ -215,34 +357,77 @@ const CheckoutModal = ({ ticket, onClose }) => {
                 )}
 
                 {step === 4 && (
-                    <div className="p-8 flex flex-col items-center justify-center text-center bg-dark-900 overflow-y-auto max-h-[80vh]">
+                    <div className="p-8 flex flex-col items-center justify-center text-center">
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: "spring", bounce: 0.5 }}
-                            className="mb-8 w-full"
+                            className="mb-6 w-full"
                         >
-                            <div className="flex items-center justify-center gap-2 mb-4 text-neon-green print:hidden">
-                                <Check size={20} />
-                                <span className="font-bold">¡Compra Exitosa!</span>
+                            {/* Pending Icon */}
+                            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-yellow-500/20 border-2 border-yellow-500 flex items-center justify-center">
+                                <svg className="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                             </div>
-                            <TicketCard ticket={ticket} data={formData} id={transactionId} />
+
+                            <h3 className="text-2xl font-display font-bold text-white mb-2">
+                                ¡Orden Recibida!
+                            </h3>
+                            <p className="text-yellow-500 font-bold mb-4">
+                                Pendiente de Verificación
+                            </p>
+
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6 text-left">
+                                <div className="flex justify-between items-center mb-3 pb-3 border-b border-white/10">
+                                    <span className="text-gray-400">ID de Orden:</span>
+                                    <span className="font-mono font-bold text-neon-blue">BOOM-{transactionId}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-3 pb-3 border-b border-white/10">
+                                    <span className="text-gray-400">Entrada:</span>
+                                    <span className="font-bold text-white">{ticket.name}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-3 pb-3 border-b border-white/10">
+                                    <span className="text-gray-400">Cantidad:</span>
+                                    <span className="font-bold text-white">{quantity}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-3 pb-3 border-b border-white/10">
+                                    <span className="text-gray-400">Método de Pago:</span>
+                                    <span className="font-bold text-white capitalize">{paymentMethod}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400">Total:</span>
+                                    <span className="font-bold text-neon-green text-xl">S/ {ticket.price * quantity}</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6">
+                                <p className="text-gray-300 text-sm">
+                                    {paymentMethod === 'yape' ? (
+                                        <>
+                                            Tu pago está siendo verificado. Recibirás tu entrada por correo una vez que sea aprobada.
+                                            <br /><br />
+                                            <span className="text-yellow-500 font-bold">⏱️ Tiempo estimado: 1-24 horas</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            Nos pondremos en contacto contigo para coordinar el pago en efectivo.
+                                            <br /><br />
+                                            <span className="text-yellow-500 font-bold">📞 Te contactaremos pronto</span>
+                                        </>
+                                    )}
+                                </p>
+                            </div>
                         </motion.div>
 
-                        <div className="space-y-3 w-full print:hidden">
-                            <button
-                                onClick={() => window.print()}
-                                className="flex items-center justify-center gap-2 w-full py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
-                            >
-                                <Printer size={20} /> Imprimir Entrada
-                            </button>
+                        <div className="space-y-3 w-full">
                             <a
                                 href={getWhatsAppLink()}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] text-white font-bold rounded-xl hover:bg-[#20bd5a] transition-colors"
                             >
-                                <MessageCircle size={20} /> Confirmar por WhatsApp
+                                <MessageCircle size={20} /> Contactar por WhatsApp
                             </a>
                             <button onClick={onClose} className="w-full py-3 bg-transparent text-gray-400 hover:text-white text-sm">
                                 Cerrar

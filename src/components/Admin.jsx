@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, User, LayoutDashboard, LogOut, DollarSign, Users, Ticket, AlertTriangle, Search, Eye, X, Printer, Trash2 } from 'lucide-react';
+import { Lock, User, LayoutDashboard, LogOut, DollarSign, Users, Ticket, AlertTriangle, Search, Eye, X, Printer, Trash2, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import TicketCard from './TicketCard';
 
 const AdminLogin = ({ onLogin }) => {
@@ -56,14 +57,20 @@ const AdminLogin = ({ onLogin }) => {
 };
 
 const AdminDashboard = ({ onLogout }) => {
-    const [stats, setStats] = useState({ totalSales: 0, totalRevenue: 0, ticketsSold: 0 });
+    const [stats, setStats] = useState({ totalSales: 0, totalRevenue: 0, ticketsSold: 0, pendingOrders: 0 });
     const [sales, setSales] = useState([]);
+    const [pendingSales, setPendingSales] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState('pending'); // 'pending' or 'approved'
 
     // Ticket Modal State
     const [selectedSale, setSelectedSale] = useState(null);
     const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+
+    // Payment Proof Modal State
+    const [selectedProof, setSelectedProof] = useState(null);
+    const [isProofModalOpen, setIsProofModalOpen] = useState(false);
 
     useEffect(() => {
         fetchSales();
@@ -89,20 +96,98 @@ const AdminDashboard = ({ onLogout }) => {
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            setSales(data);
+            // Separate pending and approved sales
+            const pending = data.filter(sale => sale.status === 'pending');
+            const approved = data.filter(sale => sale.status === 'approved');
 
-            const totalRevenue = data.reduce((acc, sale) => acc + parseFloat(sale.total_amount || sale.total || 0), 0);
-            const totalTickets = data.reduce((acc, sale) => acc + parseInt(sale.quantity), 0);
+            setSales(approved);
+            setPendingSales(pending);
+
+            // Calculate stats only for approved orders
+            const totalRevenue = approved.reduce((acc, sale) => acc + parseFloat(sale.total_amount || sale.total || 0), 0);
+            const totalTickets = approved.reduce((acc, sale) => acc + parseInt(sale.quantity), 0);
 
             setStats({
-                totalSales: data.length, // Clientes unicos approx
+                totalSales: approved.length,
                 totalRevenue,
-                ticketsSold: totalTickets
+                ticketsSold: totalTickets,
+                pendingOrders: pending.length
             });
         } catch (error) {
             console.error('Error fetching sales:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleApproveOrder = async (orderId) => {
+        if (!window.confirm('¿Aprobar esta orden? Se generará el ticket para el cliente.')) {
+            return;
+        }
+
+        try {
+            if (supabase) {
+                const { error } = await supabase
+                    .from('boom_sales_2026')
+                    .update({
+                        status: 'approved',
+                        approved_at: new Date().toISOString(),
+                        approved_by: 'admin'
+                    })
+                    .eq('id', orderId);
+
+                if (error) throw error;
+            } else {
+                // LocalStorage fallback
+                const sales = JSON.parse(localStorage.getItem('boom_sales') || '[]');
+                const saleIndex = sales.findIndex(s => s.id === orderId);
+                if (saleIndex !== -1) {
+                    sales[saleIndex].status = 'approved';
+                    sales[saleIndex].approved_at = new Date().toISOString();
+                    sales[saleIndex].approved_by = 'admin';
+                    localStorage.setItem('boom_sales', JSON.stringify(sales));
+                }
+            }
+
+            alert('✅ Orden aprobada exitosamente');
+            fetchSales(); // Refresh data
+        } catch (error) {
+            console.error('Error approving order:', error);
+            alert('Error al aprobar la orden: ' + error.message);
+        }
+    };
+
+    const handleRejectOrder = async (orderId) => {
+        const reason = window.prompt('Motivo del rechazo (opcional):');
+        if (reason === null) return; // User cancelled
+
+        try {
+            if (supabase) {
+                const { error } = await supabase
+                    .from('boom_sales_2026')
+                    .update({
+                        status: 'rejected',
+                        rejection_reason: reason || 'Sin motivo especificado'
+                    })
+                    .eq('id', orderId);
+
+                if (error) throw error;
+            } else {
+                // LocalStorage fallback
+                const sales = JSON.parse(localStorage.getItem('boom_sales') || '[]');
+                const saleIndex = sales.findIndex(s => s.id === orderId);
+                if (saleIndex !== -1) {
+                    sales[saleIndex].status = 'rejected';
+                    sales[saleIndex].rejection_reason = reason || 'Sin motivo especificado';
+                    localStorage.setItem('boom_sales', JSON.stringify(sales));
+                }
+            }
+
+            alert('❌ Orden rechazada');
+            fetchSales(); // Refresh data
+        } catch (error) {
+            console.error('Error rejecting order:', error);
+            alert('Error al rechazar la orden: ' + error.message);
         }
     };
 
@@ -142,7 +227,9 @@ const AdminDashboard = ({ onLogout }) => {
         }
     };
 
-    const filteredSales = sales.filter(sale =>
+    const salesToDisplay = activeTab === 'pending' ? pendingSales : sales;
+
+    const filteredSales = salesToDisplay.filter(sale =>
         sale.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (sale.email && sale.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -176,7 +263,25 @@ const AdminDashboard = ({ onLogout }) => {
 
             <div className="container mx-auto px-6 py-10">
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    <div
+                        onClick={() => setActiveTab('pending')}
+                        className={`p-6 rounded-2xl border cursor-pointer transition-all relative overflow-hidden group ${activeTab === 'pending' ? 'bg-yellow-500/10 border-yellow-500 hover:bg-yellow-500/20' : 'bg-dark-800 border-white/10 hover:border-yellow-500/50'}`}
+                    >
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <AlertTriangle size={64} className="text-yellow-500" />
+                        </div>
+                        <h3 className={`text-sm uppercase tracking-widest font-medium mb-1 ${activeTab === 'pending' ? 'text-yellow-500' : 'text-gray-400'}`}>Por Aprobar</h3>
+                        <p className={`text-4xl font-bold ${activeTab === 'pending' ? 'text-white' : 'text-yellow-500'}`}>
+                            {stats.pendingOrders}
+                        </p>
+                        {stats.pendingOrders > 0 && (
+                            <div className="absolute px-2 py-1 bg-yellow-500 text-black text-xs font-bold rounded-full top-4 right-4 animate-pulse">
+                                REQUIERE ATENCIÓN
+                            </div>
+                        )}
+                    </div>
+
                     <div className="bg-dark-800 p-6 rounded-2xl border border-white/10 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                             <DollarSign size={64} />
@@ -202,87 +307,158 @@ const AdminDashboard = ({ onLogout }) => {
                     </div>
                 </div>
 
-                {/* Recent Sales Table */}
-                <div className="bg-dark-900 rounded-2xl border border-white/10 overflow-hidden">
-                    <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <h3 className="text-xl font-bold text-white">Ventas Recientes</h3>
-                        <div className="relative w-full md:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Buscar cliente..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-black border border-white/20 rounded-xl py-2 pl-10 pr-4 text-white focus:border-neon-pink outline-none transition-colors"
-                            />
+                {/* Tab Navigation */}
+                <div className="flex gap-4 mb-6">
+                    <button
+                        onClick={() => setActiveTab('pending')}
+                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'pending'
+                            ? 'bg-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]'
+                            : 'bg-dark-800 text-gray-400 hover:text-white border border-white/10'}`}
+                    >
+                        Pendientes ({stats.pendingOrders})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('approved')}
+                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'approved'
+                            ? 'bg-neon-green text-black shadow-[0_0_15px_rgba(57,255,20,0.4)]'
+                            : 'bg-dark-800 text-gray-400 hover:text-white border border-white/10'}`}
+                    >
+                        Aprobados / Historial
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('scanner')}
+                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'scanner'
+                            ? 'bg-neon-pink text-white shadow-[0_0_15px_rgba(255,0,255,0.4)]'
+                            : 'bg-dark-800 text-gray-400 hover:text-white border border-white/10'}`}
+                    >
+                        Escáner / Puerta
+                    </button>
+                </div>
+
+                {/* Scanner Section or Table */}
+                {activeTab === 'scanner' ? (
+                    <ScannerSection sales={sales} fetchSales={fetchSales} />
+                ) : (
+                    <div className="bg-dark-900 rounded-2xl border border-white/10 overflow-hidden">
+                        <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 className="text-xl font-bold text-white">
+                                {activeTab === 'pending' ? 'Órdenes por Aprobar' : 'Ventas Aprobadas'}
+                            </h3>
+                            <div className="relative w-full md:w-64">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar cliente..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-black border border-white/20 rounded-xl py-2 pl-10 pr-4 text-white focus:border-neon-pink outline-none transition-colors"
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider">
-                                <tr>
-                                    <th className="p-4">Cliente</th>
-                                    <th className="p-4">Email / Info</th>
-                                    <th className="p-4">Tipo Entrada</th>
-                                    <th className="p-4 text-center">Cant.</th>
-                                    <th className="p-4 text-right">Total</th>
-                                    <th className="p-4 text-right">Fecha</th>
-                                    <th className="p-4 text-center">Ver</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                                {loading ? (
-                                    <tr><td colSpan="7" className="p-8 text-center text-gray-400">Cargando datos...</td></tr>
-                                ) : filteredSales.length > 0 ? (
-                                    filteredSales.map((sale) => (
-                                        <tr key={sale.id} className="hover:bg-white/5 transition-colors group">
-                                            <td className="p-4 font-medium text-white flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center text-xs font-bold">
-                                                    {sale.name.charAt(0)}
-                                                </div>
-                                                {sale.name}
-                                            </td>
-                                            <td className="p-4 text-gray-300">
-                                                <div className="flex flex-col">
-                                                    <span>{sale.email}</span>
-                                                    <span className="text-xs text-gray-500">{sale.phone}</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold border ${(sale.ticket_name || sale.ticketName) === 'VIP' ? 'border-neon-pink text-neon-pink' :
-                                                    (sale.ticket_name || sale.ticketName) === 'BOOM! EXP' ? 'border-neon-gold text-neon-gold' :
-                                                        'border-gray-500 text-gray-300'
-                                                    }`}>
-                                                    {sale.ticket_name || sale.ticketName}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-center text-gray-300">{sale.quantity}</td>
-                                            <td className="p-4 text-right font-bold text-neon-green">S/ {sale.total_amount || sale.total}</td>
-                                            <td className="p-4 text-right text-gray-500 text-sm">
-                                                {new Date(sale.created_at || sale.date).toLocaleDateString()}
-                                            </td>
-                                            <td className="p-4 text-center">
-                                                <button
-                                                    onClick={() => openTicketModal(sale)}
-                                                    className="p-2 rounded-lg bg-white/5 hover:bg-neon-purple text-gray-400 hover:text-white transition-all transform hover:scale-110"
-                                                    title="Ver Ticket"
-                                                >
-                                                    <Ticket size={18} />
-                                                </button>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider">
+                                    <tr>
+                                        <th className="p-4">Cliente</th>
+                                        <th className="p-4">Email / Info</th>
+                                        <th className="p-4">Tipo Entrada</th>
+                                        <th className="p-4 text-center">Cant.</th>
+                                        <th className="p-4 text-right">Total</th>
+                                        <th className="p-4 text-center">Pago</th>
+                                        {activeTab === 'pending' && <th className="p-4 text-center">Captura</th>}
+                                        <th className="p-4 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {loading ? (
+                                        <tr><td colSpan="8" className="p-8 text-center text-gray-400">Cargando datos...</td></tr>
+                                    ) : filteredSales.length > 0 ? (
+                                        filteredSales.map((sale) => (
+                                            <tr key={sale.id} className="hover:bg-white/5 transition-colors group">
+                                                <td className="p-4 font-medium text-white flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center text-xs font-bold">
+                                                        {sale.name.charAt(0)}
+                                                    </div>
+                                                    {sale.name}
+                                                    <div className="text-xs text-gray-500">ID: {sale.id}</div>
+                                                </td>
+                                                <td className="p-4 text-gray-300">
+                                                    <div className="flex flex-col">
+                                                        <span>{sale.email}</span>
+                                                        <span className="text-xs text-gray-500">{sale.phone}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold border ${(sale.ticket_name || sale.ticketName) === 'VIP' ? 'border-neon-pink text-neon-pink' :
+                                                        (sale.ticket_name || sale.ticketName) === 'BOOM! EXP' ? 'border-neon-gold text-neon-gold' :
+                                                            'border-gray-500 text-gray-300'
+                                                        }`}>
+                                                        {sale.ticket_name || sale.ticketName}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-center text-gray-300">{sale.quantity}</td>
+                                                <td className="p-4 text-right font-bold text-neon-green">S/ {sale.total_amount || sale.total}</td>
+                                                <td className="p-4 text-center capitalize text-gray-400">
+                                                    {sale.payment_method || 'yape'}
+                                                </td>
+
+                                                {activeTab === 'pending' && (
+                                                    <td className="p-4 text-center">
+                                                        {sale.payment_proof ? (
+                                                            <button
+                                                                onClick={() => { setSelectedProof(sale); setIsProofModalOpen(true); }}
+                                                                className="text-neon-blue hover:text-white text-xs underline"
+                                                            >
+                                                                <Eye size={18} className="mx-auto" />
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-gray-600">-</span>
+                                                        )}
+                                                    </td>
+                                                )}
+
+                                                <td className="p-4 text-center">
+                                                    {activeTab === 'approved' ? (
+                                                        <button
+                                                            onClick={() => openTicketModal(sale)}
+                                                            className="p-2 rounded-lg bg-white/5 hover:bg-neon-purple text-gray-400 hover:text-white transition-all transform hover:scale-110"
+                                                            title="Ver Ticket"
+                                                        >
+                                                            <Ticket size={18} />
+                                                        </button>
+                                                    ) : (
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <button
+                                                                onClick={() => handleApproveOrder(sale.id)}
+                                                                className="p-2 rounded-lg bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white transition-all"
+                                                                title="Aprobar"
+                                                            >
+                                                                <Check size={18} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleRejectOrder(sale.id)}
+                                                                className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white transition-all"
+                                                                title="Rechazar"
+                                                            >
+                                                                <X size={18} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="8" className="p-8 text-center text-gray-500">
+                                                No hay resultados en esta sección.
                                             </td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="7" className="p-8 text-center text-gray-500">
-                                            No hay resultados.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* TICKET MODAL */}
@@ -324,8 +500,363 @@ const AdminDashboard = ({ onLogout }) => {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* PAYMENT PROOF MODAL */}
+            <AnimatePresence>
+                {isProofModalOpen && selectedProof && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-y-auto">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="bg-dark-900 border border-white/20 rounded-2xl w-full max-w-2xl relative overflow-hidden"
+                        >
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/50">
+                                <h3 className="text-xl font-bold text-white">Verificación de Pago</h3>
+                                <button
+                                    onClick={() => setIsProofModalOpen(false)}
+                                    className="text-gray-400 hover:text-white transition-colors"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 md:flex gap-6">
+                                {/* Image Column */}
+                                <div className="md:w-1/2 mb-6 md:mb-0">
+                                    <div className="bg-black/50 border border-white/10 rounded-xl p-2 h-full flex items-center justify-center min-h-[300px]">
+                                        <img
+                                            src={selectedProof.payment_proof}
+                                            alt="Comprobante"
+                                            className="max-h-[500px] w-full object-contain rounded-lg"
+                                        />
+                                    </div>
+                                    <a
+                                        href={selectedProof.payment_proof}
+                                        download={`comprobante-${selectedProof.id}.png`}
+                                        className="block text-center text-neon-blue text-sm mt-2 hover:underline"
+                                    >
+                                        Descargar Imagen Original
+                                    </a>
+                                </div>
+
+                                {/* Details Column */}
+                                <div className="md:w-1/2 flex flex-col justify-between">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <span className="text-gray-500 text-sm">Cliente</span>
+                                            <p className="text-white font-bold text-lg">{selectedProof.name}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-sm">Entrada</span>
+                                            <p className="text-white text-lg">
+                                                {selectedProof.quantity}x {selectedProof.ticket_name}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-sm">Total a Pagar</span>
+                                            <p className="text-neon-green font-bold text-2xl">S/ {selectedProof.total_amount}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-sm">ID Orden</span>
+                                            <p className="font-mono text-gray-400">BOOM-{selectedProof.id}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => {
+                                                handleRejectOrder(selectedProof.id);
+                                                setIsProofModalOpen(false);
+                                            }}
+                                            className="py-3 rounded-xl border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white font-bold transition-all"
+                                        >
+                                            Rechazar
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                handleApproveOrder(selectedProof.id);
+                                                setIsProofModalOpen(false);
+                                            }}
+                                            className="py-3 rounded-xl bg-neon-green text-black font-bold hover:bg-green-400 transition-all shadow-[0_0_15px_rgba(57,255,20,0.3)]"
+                                        >
+                                            Aprobar Pago
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
+};
+
+const ScannerSection = ({ sales, fetchSales }) => {
+    const [scanResult, setScanResult] = useState(null);
+    const [manualId, setManualId] = useState('');
+    const [scannerMessage, setScannerMessage] = useState('');
+    const [scannerActive, setScannerActive] = useState(true);
+
+    useEffect(() => {
+        if (!scannerActive) return;
+
+        const scanner = new Html5QrcodeScanner(
+            "reader",
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            /* verbose= */ false
+        );
+
+        scanner.render(onScanSuccess, onScanFailure);
+
+        function onScanSuccess(decodedText, decodedResult) {
+            scanner.clear();
+            setScannerActive(false);
+            handleValidateTicket(decodedText);
+        }
+
+        function onScanFailure(error) {
+            // handle scan failure, usually better to ignore and keep scanning.
+            // console.warn(`Code scan error = ${error}`);
+        }
+
+        return () => {
+            scanner.clear().catch(error => console.error("Failed to clear html5-qrcode scanner. ", error));
+        };
+    }, [scannerActive]);
+
+    const handleValidateTicket = (dataString) => {
+        try {
+            // Try to parse JSON (New format)
+            let ticketId;
+            try {
+                const data = JSON.parse(dataString);
+                ticketId = data.id;
+            } catch (e) {
+                // Legacy format or plain text
+                ticketId = dataString;
+            }
+
+            // Find ticket in sales list
+            // IMPORTANT: sales prop might not contain ALL sales if pagination exists, but here we assume it does or we should query DB.
+            // For robustness, better to query DB directly if ID found. But sales prop has everything for now.
+
+            // Note: sales passed to this component might be filtered. We should probably use the full fetch or pass allSales. 
+            // Current 'sales' prop is whatever AdminDashboard has. AdminDashboard loads ALL sales (no pagination yet).
+
+            const ticket = sales.find(s => s.id.toString() === ticketId.toString());
+
+            if (!ticket) {
+                setScanResult({ status: 'error', message: 'TICKET NO ENCONTRADO', details: 'El ID no existe en la base de datos.' });
+                return;
+            }
+
+            if (ticket.status !== 'approved') {
+                setScanResult({
+                    status: 'invalid',
+                    message: 'TICKET NO VÁLIDO',
+                    details: `El estado del ticket es: ${ticket.status.toUpperCase()}`,
+                    ticket: ticket
+                });
+                return;
+            }
+
+            if (ticket.checked_in) {
+                setScanResult({
+                    status: 'used',
+                    message: 'TICKET YA USADO',
+                    details: `Ingresó el: ${new Date(ticket.checked_in_at).toLocaleTimeString()}`,
+                    ticket: ticket
+                });
+                return;
+            }
+
+            setScanResult({
+                status: 'valid',
+                message: 'TICKET VÁLIDO',
+                details: 'Puede ingresar.',
+                ticket: ticket
+            });
+
+        } catch (err) {
+            setScanResult({ status: 'error', message: 'ERROR DE LECTURA', details: err.message });
+        }
+    };
+
+    const handleManualSubmit = (e) => {
+        e.preventDefault();
+        setScannerActive(false); // Stop scanner to show result
+        handleValidateTicket(manualId);
+    };
+
+    const handleCheckIn = async () => {
+        if (!scanResult || !scanResult.ticket) return;
+
+        try {
+            const ticketId = scanResult.ticket.id;
+
+            if (supabase) {
+                const { error } = await supabase
+                    .from('boom_sales_2026')
+                    .update({
+                        checked_in: true,
+                        checked_in_at: new Date().toISOString()
+                    })
+                    .eq('id', ticketId);
+
+                if (error) throw error;
+            } else {
+                // LocalStorage Fallback
+                const storedSales = JSON.parse(localStorage.getItem('boom_sales') || '[]');
+                const index = storedSales.findIndex(s => s.id === ticketId);
+                if (index !== -1) {
+                    storedSales[index].checked_in = true;
+                    storedSales[index].checked_in_at = new Date().toISOString();
+                    localStorage.setItem('boom_sales', JSON.stringify(storedSales));
+                }
+            }
+
+            alert(`✅ INGRESO REGISTRADO: ${scanResult.ticket.name}`);
+            setScanResult(null);
+            setScannerActive(true);
+            setManualId('');
+            fetchSales(); // Refresh data
+
+        } catch (error) {
+            console.error('Error check-in:', error);
+            alert('Error al registrar ingreso');
+        }
+    };
+
+    const resetScanner = () => {
+        setScanResult(null);
+        setScannerActive(true);
+        setManualId('');
+    };
+
+    return (
+        <div className="bg-dark-900 rounded-2xl border border-white/10 overflow-hidden p-6">
+            <h3 className="text-xl font-bold text-white mb-6">Escáner de Tickets</h3>
+
+            <div className="flex flex-col md:flex-row gap-8">
+                {/* Scanner Area */}
+                <div className="w-full md:w-1/2">
+                    {scannerActive ? (
+                        <div className="bg-black border-2 border-dashed border-white/20 rounded-xl overflow-hidden relative">
+                            <div id="reader" className="w-full"></div>
+                            <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-gray-500 pointer-events-none">
+                                Apunta la cámara al código QR
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center bg-black/50 border border-white/10 rounded-xl p-10 h-64">
+                            <p className="text-gray-400 mb-4">Escáner Pausado</p>
+                            <button
+                                onClick={resetScanner}
+                                className="px-6 py-2 bg-neon-blue text-black font-bold rounded-lg hover:bg-white transition-colors"
+                            >
+                                Escanear Nuevo
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="mt-6">
+                        <div className="mb-2 text-sm text-gray-400 uppercase font-bold">Ingreso Manual</div>
+                        <form onSubmit={handleManualSubmit} className="flex gap-2">
+                            <input
+                                type="text"
+                                value={manualId}
+                                onChange={(e) => setManualId(e.target.value)}
+                                placeholder="Ingrese ID del Ticket"
+                                className="flex-1 bg-black border border-white/20 rounded-lg px-4 py-2 text-white focus:border-neon-pink outline-none"
+                            />
+                            <button type="submit" className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg">
+                                Verificar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Result Area */}
+                <div className="w-full md:w-1/2">
+                    {scanResult ? (
+                        <div className={`h-full rounded-2xl p-8 flex flex-col items-center justify-center text-center border-2 ${scanResult.status === 'valid' ? 'bg-green-500/10 border-green-500' :
+                            scanResult.status === 'used' ? 'bg-yellow-500/10 border-yellow-500' :
+                                'bg-red-500/10 border-red-500'
+                            }`}>
+                            <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${scanResult.status === 'valid' ? 'bg-green-500 text-white' :
+                                scanResult.status === 'used' ? 'bg-yellow-500 text-black' :
+                                    'bg-red-500 text-white'
+                                }`}>
+                                {scanResult.status === 'valid' ? <Check size={48} /> :
+                                    scanResult.status === 'used' ? <AlertTriangle size={48} /> :
+                                        <X size={48} />}
+                            </div>
+
+                            <h2 className={`text-3xl font-display font-bold mb-2 ${scanResult.status === 'valid' ? 'text-green-500' :
+                                scanResult.status === 'used' ? 'text-yellow-500' :
+                                    'text-red-500'
+                                }`}>
+                                {scanResult.message}
+                            </h2>
+
+                            <p className="text-gray-400 mb-8 max-w-xs mx-auto">
+                                {scanResult.details}
+                            </p>
+
+                            {scanResult.ticket && (
+                                <div className="bg-black/40 rounded-xl p-4 w-full mb-6 text-left">
+                                    <div className="flex justify-between mb-2">
+                                        <span className="text-gray-500 text-xs uppercase">Cliente</span>
+                                        <span className="text-white font-bold">{scanResult.ticket.name}</span>
+                                    </div>
+                                    <div className="flex justify-between mb-2">
+                                        <span className="text-gray-500 text-xs uppercase">Ticket</span>
+                                        <span className={`font-bold ${(scanResult.ticket.ticket_name || scanResult.ticket.ticketName) === 'VIP' ? 'text-neon-pink' : 'text-white'
+                                            }`}>
+                                            {scanResult.ticket.ticket_name || scanResult.ticket.ticketName}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500 text-xs uppercase">ID</span>
+                                        <span className="font-mono text-gray-400">{scanResult.ticket.id}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {scanResult.status === 'valid' && (
+                                <button
+                                    onClick={handleCheckIn}
+                                    className="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl text-xl shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all transform hover:scale-105"
+                                >
+                                    MARCAR INGRESO
+                                </button>
+                            )}
+
+                            {(scanResult.status !== 'valid') && (
+                                <button
+                                    onClick={resetScanner}
+                                    className="text-gray-400 hover:text-white underline mt-4"
+                                >
+                                    Escanear Siguiente
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500 border border-white/10 border-dashed rounded-2xl bg-black/20">
+                            <div className="mb-4 opacity-50">
+                                <Search size={48} />
+                            </div>
+                            <p>Esperando lectura...</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
+
 };
 
 export default function Admin() {
