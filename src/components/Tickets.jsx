@@ -111,8 +111,8 @@ const CheckoutModal = ({ ticket, onClose }) => {
     };
 
     const handleBuy = async () => {
-        // Validate payment proof for Yape
-        if (paymentMethod === 'yape' && !paymentProof) {
+        // Validate payment proof for Yape (only for paid tickets)
+        if (ticket.price > 0 && paymentMethod === 'yape' && !paymentProof) {
             alert('Por favor sube la captura de tu pago por Yape');
             setStep(2.5);
             return;
@@ -240,7 +240,7 @@ const CheckoutModal = ({ ticket, onClose }) => {
                 {step === 2 && (
                     <div className="p-6">
                         <h3 className="text-2xl font-display font-bold text-white mb-6">Tus Datos</h3>
-                        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setStep(2.5); }}>
+                        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); ticket.price === 0 ? handleBuy() : setStep(2.5); }}>
                             <div className="relative">
                                 <User className="absolute left-3 top-3 text-gray-500" size={18} />
                                 <input required name="name" value={formData.name} onChange={handleInputChange} placeholder="Nombre Completo (Titular)" className="w-full bg-black border border-white/20 rounded-lg py-3 pl-10 pr-4 text-white focus:border-neon-blue outline-none transition-colors" />
@@ -286,7 +286,7 @@ const CheckoutModal = ({ ticket, onClose }) => {
                             </p>
 
                             <button type="submit" className="w-full mt-6 py-3 bg-neon-pink text-white font-bold rounded-xl hover:bg-neon-purple transition-colors">
-                                Continuar al Pago
+                                {ticket.price === 0 ? 'Confirmar Registro' : 'Continuar al Pago'}
                             </button>
                             <button onClick={() => setStep(1)} type="button" className="w-full mt-2 py-2 text-gray-400 hover:text-white text-sm">
                                 Volver
