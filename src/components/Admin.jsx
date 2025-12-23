@@ -972,20 +972,40 @@ const ContentManager = () => {
 
     const handleAddGalleryImage = async (file) => {
         if (!file) return;
+
+        // Check file size (Supabase default limit is 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+            alert('❌ El archivo es demasiado pesado. El límite es de 50MB para videos.');
+            return;
+        }
+
         setUploading(true);
         try {
+            console.log("Subiendo archivo:", file.name, file.type, file.size);
             const publicUrl = await handleFileUpload(file, 'gallery');
+            const fileType = file.type.startsWith('video/') ? 'video' : 'image';
 
-            const { error } = await supabase
+            const { error: dbError } = await supabase
                 .from('boom_gallery')
-                .insert([{ image_url: publicUrl, title: 'Nueva Imagen' }]);
+                .insert([{
+                    image_url: publicUrl,
+                    title: 'Nuevo Contenido',
+                    media_type: fileType
+                }]);
 
-            if (error) throw error;
-            alert('✅ Imagen agregada');
+            if (dbError) {
+                console.error("Error en base de datos:", dbError);
+                throw new Error("Error al registrar en la base de datos: " + dbError.message);
+            }
+
+            alert(`✅ ${fileType === 'video' ? 'Video' : 'Imagen'} agregado correctamente`);
             fetchContent();
         } catch (error) {
-            console.error(error);
-            alert('Error al subir imagen: ' + error.message);
+            console.error("Error completo de subida:", error);
+            const errorMsg = error.message === 'Failed to fetch'
+                ? 'Error de conexión o archivo demasiado grande. Verifica tu internet o usa un video más corto.'
+                : error.message;
+            alert('Error al subir contenido: ' + errorMsg);
         } finally {
             setUploading(false);
         }
@@ -1063,10 +1083,10 @@ const ContentManager = () => {
                         <div>
                             <div className="mb-6 flex justify-end">
                                 <label className="flex items-center gap-2 px-4 py-2 bg-neon-green text-black font-bold rounded-lg cursor-pointer hover:bg-green-400 transition-colors">
-                                    <Plus size={20} /> Agregar Imagen
+                                    <Plus size={20} /> Agregar Multimedia
                                     <input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/*,video/mp4,video/quicktime,image/gif"
                                         className="hidden"
                                         onChange={(e) => handleAddGalleryImage(e.target.files[0])}
                                         disabled={uploading}
@@ -1075,11 +1095,28 @@ const ContentManager = () => {
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {galleryItems.map(item => (
-                                    <div key={item.id} className="relative group aspect-square rounded-xl overflow-hidden bg-black">
-                                        <img src={item.image_url} alt="Gallery" className="w-full h-full object-cover" />
+                                    <div key={item.id} className="relative group aspect-square rounded-xl overflow-hidden bg-black border border-white/10">
+                                        {item.media_type === 'video' ? (
+                                            <video
+                                                src={item.image_url}
+                                                className="w-full h-full object-cover"
+                                                muted
+                                                loop
+                                                onMouseOver={e => e.target.play()}
+                                                onMouseOut={e => e.target.pause()}
+                                            />
+                                        ) : (
+                                            <img src={item.image_url} alt="Gallery" className="w-full h-full object-cover" />
+                                        )}
+
+                                        {/* Media Type Badge */}
+                                        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded text-[10px] text-white font-bold uppercase tracking-wider border border-white/10">
+                                            {item.media_type || 'image'}
+                                        </div>
+
                                         <button
                                             onClick={() => handleDeleteGalleryImage(item.id)}
-                                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-lg"
                                         >
                                             <Trash2 size={16} />
                                         </button>

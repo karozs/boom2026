@@ -8,12 +8,36 @@ const Hero = () => {
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
     const [isMounted, setIsMounted] = useState(false);
 
+    const calculateAttendeeCount = () => {
+        const startDate = new Date("2025-12-20T00:00:00"); // Fecha de inicio de campaña
+        const now = new Date();
+        const diffInMs = now - startDate;
+        const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+        // 24 base + promedio de 4 por día (3 a 5 diario)
+        const baseCount = 24;
+        const increasePerDay = 4;
+
+        return Math.floor(baseCount + (diffInDays * increasePerDay));
+    };
+
+    const [attendeeCount, setAttendeeCount] = useState(calculateAttendeeCount());
+
     useEffect(() => {
         setIsMounted(true);
         const timer = setInterval(() => {
             setTimeLeft(calculateTimeLeft());
         }, 1000);
-        return () => clearInterval(timer);
+
+        // Actualizar el contador cada hora para mayor precisión
+        const attendeeInterval = setInterval(() => {
+            setAttendeeCount(calculateAttendeeCount());
+        }, 3600000); // Cada hora
+
+        return () => {
+            clearInterval(timer);
+            clearInterval(attendeeInterval);
+        };
     }, []);
 
     function calculateTimeLeft() {
@@ -88,6 +112,25 @@ const Hero = () => {
                         <br className="hidden md:block" />
                         <span className="text-white font-medium block mt-2">Una noche de energía, luz y música explosiva.</span>
                     </p>
+
+                    {/* Attendees counter */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mb-8 flex flex-col items-center"
+                    >
+                        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-neon-green/10 border border-neon-green/20 backdrop-blur-md">
+                            <div className="flex -space-x-2">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="w-6 h-6 rounded-full border border-black bg-gradient-to-br from-gray-400 to-gray-600"></div>
+                                ))}
+                            </div>
+                            <span className="text-neon-green text-sm font-bold">
+                                {attendeeCount} personas ya tienen su entrada
+                            </span>
+                            <div className="w-2 h-2 rounded-full bg-neon-green animate-pulse"></div>
+                        </div>
+                    </motion.div>
 
                     <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-16">
                         <Link

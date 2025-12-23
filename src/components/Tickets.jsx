@@ -526,10 +526,15 @@ const Tickets = () => {
                             className={`relative bg-dark-800 rounded-3xl p-8 border ${ticket.color} flex flex-col transition-all duration-300 h-full`}
                         >
                             {ticket.recommended && (
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-neon-pink text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg tracking-wider">
+                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-neon-pink text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg tracking-wider z-20">
                                     MÁS VENDIDO
                                 </div>
                             )}
+
+                            {/* Fictional availability badge */}
+                            <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 px-2 py-1 rounded text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                                {index === 0 ? "Últimas 12 libres" : index === 1 ? "Solo quedan 4 mesas" : "Vendiéndose rápido"}
+                            </div>
 
                             <h3 className="text-2xl font-display font-bold text-white mb-1">{ticket.name}</h3>
                             {ticket.subtitle && <p className="text-neon-blue text-sm font-bold mb-4 tracking-wider">{ticket.subtitle}</p>}

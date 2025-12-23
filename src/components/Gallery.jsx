@@ -45,11 +45,20 @@ const Gallery = () => {
                         {/* Previous Image (Peek) - Hidden on mobile */}
                         <div className="hidden md:block w-1/4 opacity-40 hover:opacity-60 transition-opacity cursor-pointer" onClick={prevSlide}>
                             <div className="aspect-[3/4] overflow-hidden rounded-xl border border-white/10">
-                                <img
-                                    src={images[getPrevIndex()].image_url}
-                                    alt="Previous"
-                                    className="w-full h-full object-cover"
-                                />
+                                {images[getPrevIndex()].media_type === 'video' ? (
+                                    <video
+                                        src={images[getPrevIndex()].image_url}
+                                        className="w-full h-full object-cover"
+                                        muted
+                                        loop
+                                    />
+                                ) : (
+                                    <img
+                                        src={images[getPrevIndex()].image_url}
+                                        alt="Previous"
+                                        className="w-full h-full object-cover"
+                                    />
+                                )}
                             </div>
                         </div>
 
@@ -65,11 +74,22 @@ const Gallery = () => {
                                         transition={{ duration: 0.4 }}
                                         className="absolute inset-0"
                                     >
-                                        <img
-                                            src={images[currentIndex].image_url}
-                                            alt={images[currentIndex].title || "Event visual"}
-                                            className="w-full h-full object-cover"
-                                        />
+                                        {images[currentIndex].media_type === 'video' ? (
+                                            <video
+                                                src={images[currentIndex].image_url}
+                                                className="w-full h-full object-cover"
+                                                autoPlay
+                                                muted
+                                                loop
+                                                playsInline
+                                            />
+                                        ) : (
+                                            <img
+                                                src={images[currentIndex].image_url}
+                                                alt={images[currentIndex].title || "Event visual"}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        )}
                                         {/* Gradient Overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
 
@@ -92,11 +112,20 @@ const Gallery = () => {
                         {/* Next Image (Peek) - Hidden on mobile */}
                         <div className="hidden md:block w-1/4 opacity-40 hover:opacity-60 transition-opacity cursor-pointer" onClick={nextSlide}>
                             <div className="aspect-[3/4] overflow-hidden rounded-xl border border-white/10">
-                                <img
-                                    src={images[getNextIndex()].image_url}
-                                    alt="Next"
-                                    className="w-full h-full object-cover"
-                                />
+                                {images[getNextIndex()].media_type === 'video' ? (
+                                    <video
+                                        src={images[getNextIndex()].image_url}
+                                        className="w-full h-full object-cover"
+                                        muted
+                                        loop
+                                    />
+                                ) : (
+                                    <img
+                                        src={images[getNextIndex()].image_url}
+                                        alt="Next"
+                                        className="w-full h-full object-cover"
+                                    />
+                                )}
                             </div>
                         </div>
 
@@ -125,8 +154,8 @@ const Gallery = () => {
                                 key={idx}
                                 onClick={() => setCurrentIndex(idx)}
                                 className={`h-2 rounded-full transition-all duration-300 ${idx === currentIndex
-                                        ? 'w-8 bg-neon-blue shadow-[0_0_10px_rgba(0,229,255,0.6)]'
-                                        : 'w-2 bg-white/30 hover:bg-white/50'
+                                    ? 'w-8 bg-neon-blue shadow-[0_0_10px_rgba(0,229,255,0.6)]'
+                                    : 'w-2 bg-white/30 hover:bg-white/50'
                                     }`}
                                 aria-label={`Go to slide ${idx + 1}`}
                             />

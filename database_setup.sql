@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS boom_gallery (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     title TEXT,
     image_url TEXT NOT NULL,
+    media_type TEXT DEFAULT 'image',
     display_order INTEGER DEFAULT 0
 );
 
