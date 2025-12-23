@@ -531,11 +531,6 @@ const Tickets = () => {
                                 </div>
                             )}
 
-                            {/* Fictional availability badge */}
-                            <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 px-2 py-1 rounded text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                                {index === 0 ? "Últimas 12 libres" : index === 1 ? "Solo quedan 4 mesas" : "Vendiéndose rápido"}
-                            </div>
-
                             <h3 className="text-2xl font-display font-bold text-white mb-1">{ticket.name}</h3>
                             {ticket.subtitle && <p className="text-neon-blue text-sm font-bold mb-4 tracking-wider">{ticket.subtitle}</p>}
                             <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-6">
