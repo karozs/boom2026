@@ -36,38 +36,85 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+}
+
 @media print {
 
   html,
   body {
-    height: 100vh;
-    overflow: hidden;
+    height: auto;
     margin: 0;
     padding: 0;
-    background-color: white;
+    background: white !important;
+    overflow: visible !important;
   }
 
-  body * {
+  /* Hide everything by default */
+  body {
     visibility: hidden;
   }
 
-  #printable-ticket,
-  #printable-ticket * {
+  /* Target the exact modal used in Admin.jsx */
+  /* We use the flex class to be sure we target the correct one */
+  .fixed.inset-0.z-\[100\],
+  .fixed.inset-0.z-\[100\] * {
     visibility: visible;
   }
 
-  #printable-ticket {
+  /* Position the printable content at the top of the page */
+  .fixed.inset-0.z-\[100\] {
+    position: absolute !important;
+    background: transparent !important;
+    display: block !important;
+    padding: 0 !important;
+    left: 0;
+    top: 0;
+    width: 100%;
+    overflow: visible !important;
+  }
+
+  /* Remove modal borders and shadows for print */
+  .bg-dark-900.border.border-white\/20 {
+    border: none !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* The scrollable div inside the modal must expand */
+  .flex-1.overflow-y-auto {
+    overflow: visible !important;
+    display: block !important;
+    max-height: none !important;
+  }
+
+  .printable-ticket {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) !important;
-    width: 100%;
-    max-width: 350px;
-    margin: 0;
-    padding: 0;
-    border: none;
-    box-shadow: none;
+    margin: 0 auto 50px auto !important;
+    page-break-after: always;
+    display: block !important;
+    border: 1px solid #333 !important;
+    /* Slight border for cutting */
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  /* Hide UI elements */
+  .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
   }
 }

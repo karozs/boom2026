@@ -138,7 +138,7 @@ const Experience = () => {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-90"></div>
 
                                 {/* Content */}
-                                <div className="absolute inset-0 flex flex-col justify-end p-6 relative z-10">
+                                <div className="absolute inset-0 flex flex-col justify-end p-6 relative hover:z-20 z-10">
                                     <div className={`w-12 h-1 mb-4 bg-gradient-to-r ${drink.color}`}></div>
                                     <h4 className="text-xl font-bold font-display text-white mb-1 group-hover:scale-105 transition-transform origin-left">{drink.name}</h4>
                                     <p className="text-gray-300 text-xs font-medium opacity-80 group-hover:opacity-100 transition-opacity">{drink.desc}</p>

@@ -496,36 +496,53 @@ const AdminDashboard = ({ onLogout }) => {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
-                            className="bg-transparent w-full max-w-sm relative"
+                            className="bg-dark-900 border border-white/20 rounded-3xl w-full max-w-sm relative overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
                         >
-                            <button
-                                onClick={() => setIsTicketModalOpen(false)}
-                                className="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors bg-white/10 p-2 rounded-full z-50 focus:outline-none"
-                            >
-                                <X size={24} />
-                            </button>
-
-                            <div className="bg-dark-900 rounded-3xl p-1 mb-4 print:mb-0 print:p-0">
-                                <TicketCard
-                                    ticket={{
-                                        name: selectedSale.ticket_name || selectedSale.ticketName,
-                                        id: (selectedSale.ticket_name === 'VIP' || selectedSale.ticketName === 'VIP') ? 'vip' :
-                                            ((selectedSale.ticket_name === 'BOOM! EXP' || selectedSale.ticketName === 'BOOM! EXP' || selectedSale.ticket_name === 'BOOM EXP' || selectedSale.ticketName === 'BOOM EXP')) ? 'exp' : 'gen'
-                                    }}
-                                    data={{
-                                        name: selectedSale.name,
-                                        attendees: selectedSale.attendees
-                                    }}
-                                    id={selectedSale.id}
-                                />
+                            {/* Static Header */}
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/50 backdrop-blur-md z-10 print:hidden">
+                                <h3 className="text-lg font-bold text-white">Tickets Generados</h3>
+                                <button
+                                    onClick={() => setIsTicketModalOpen(false)}
+                                    className="text-gray-400 hover:text-white transition-colors p-2"
+                                >
+                                    <X size={24} />
+                                </button>
                             </div>
 
-                            <button
-                                onClick={() => window.print()}
-                                className="w-full py-3 bg-neon-blue text-black font-bold rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,255,255,0.3)] print:hidden"
-                            >
-                                <Printer size={20} /> Imprimir Ticket
-                            </button>
+                            {/* Scrollable Body - This is what prints */}
+                            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar print:overflow-visible print:p-0">
+                                <div className="space-y-4 print:space-y-0">
+                                    {/* Generate one card per item in quantity */}
+                                    {[...Array(parseInt(selectedSale.quantity || 1))].map((_, index) => (
+                                        <TicketCard
+                                            key={`${selectedSale.id}-${index}`}
+                                            ticket={{
+                                                name: selectedSale.ticket_name || selectedSale.ticketName,
+                                                id: (selectedSale.ticket_name === 'VIP' || selectedSale.ticketName === 'VIP') ? 'vip' :
+                                                    ((selectedSale.ticket_name === 'BOOM! EXP' || selectedSale.ticketName === 'BOOM! EXP' || selectedSale.ticket_name === 'BOOM EXP' || selectedSale.ticketName === 'BOOM EXP')) ? 'exp' : 'gen'
+                                            }}
+                                            data={{
+                                                name: selectedSale.name,
+                                                attendees: selectedSale.attendees,
+                                                created_at: selectedSale.created_at
+                                            }}
+                                            id={selectedSale.id}
+                                            ticketIndex={index}
+                                            totalTickets={parseInt(selectedSale.quantity || 1)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Static Footer */}
+                            <div className="p-4 border-t border-white/10 bg-black/50 backdrop-blur-md z-10 print:hidden">
+                                <button
+                                    onClick={() => window.print()}
+                                    className="w-full py-3 bg-neon-blue text-black font-bold rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,255,255,0.3)]"
+                                >
+                                    <Printer size={20} /> Imprimir Todo ({selectedSale.quantity})
+                                </button>
+                            </div>
                         </motion.div>
                     </div>
                 )}
