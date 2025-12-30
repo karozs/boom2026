@@ -448,8 +448,8 @@ const AdminDashboard = ({ onLogout }) => {
                                     />
                                 </div>
                             </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
+                            <div className="hidden md:block overflow-x-auto custom-scrollbar pb-4">
+                                <table className="w-full text-left min-w-[800px]">
                                     <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider">
                                         <tr>
                                             <th className="p-4">Cliente</th>
@@ -564,6 +564,109 @@ const AdminDashboard = ({ onLogout }) => {
                                         )}
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {/* MOBILE CARD VIEW (Visible only on Mobile) */}
+                            <div className="md:hidden space-y-4">
+                                {loading ? (
+                                    <div className="text-center text-gray-400 py-8">Cargando datos...</div>
+                                ) : filteredSales.length > 0 ? (
+                                    filteredSales.map((sale) => (
+                                        <div key={sale.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden p-4 relative group hover:bg-white/10 transition-colors">
+                                            {/* Header */}
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center font-bold text-white shadow-lg shadow-purple-500/20">
+                                                        {sale.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-white text-sm">{sale.name}</h4>
+                                                        <div className="flex items-center gap-2 text-xs">
+                                                            <span className="text-gray-500">ID: {sale.id}</span>
+                                                            <span className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${(sale.ticket_name || sale.ticketName) === 'VIP' ? 'border-neon-pink text-neon-pink bg-pink-500/10' : 'border-neon-gold text-neon-gold bg-yellow-500/10'}`}>
+                                                                {sale.ticket_name || sale.ticketName}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {activeTab === 'approved' && (
+                                                    sale.checked_in ? (
+                                                        <span className="text-[10px] font-bold text-red-500 border border-red-500/50 px-2 py-0.5 rounded bg-red-500/10">USADO</span>
+                                                    ) : (
+                                                        <span className="text-[10px] font-bold text-green-500 border border-green-500/50 px-2 py-0.5 rounded bg-green-500/10">OK</span>
+                                                    )
+                                                )}
+                                            </div>
+
+                                            {/* Info Grid */}
+                                            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs mb-4 p-3 bg-black/40 rounded-lg border border-white/5">
+                                                <div>
+                                                    <span className="block text-gray-500 uppercase text-[10px] mb-0.5">Cantidad</span>
+                                                    <span className="text-white font-bold">{sale.quantity} entrada(s)</span>
+                                                </div>
+                                                <div>
+                                                    <span className="block text-gray-500 uppercase text-[10px] mb-0.5">Total Pagar</span>
+                                                    <span className="text-neon-green font-bold text-sm">S/ {(parseFloat(sale.total_amount || sale.total || 0)).toFixed(2)}</span>
+                                                </div>
+                                                <div className="col-span-2 border-t border-white/5 pt-2 mt-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-gray-400">📧</span>
+                                                        <span className="text-gray-300 truncate">{sale.email}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-gray-400">📱</span>
+                                                        <span className="text-gray-300">{sale.phone}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex gap-2">
+                                                {activeTab === 'pending' ? (
+                                                    <>
+                                                        {sale.payment_proof_url ? (
+                                                            <button
+                                                                onClick={() => { setSelectedProof(sale.payment_proof_url); setIsProofModalOpen(true); }}
+                                                                className="flex-1 py-2.5 bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded-lg font-bold text-xs flex items-center justify-center gap-1 hover:bg-blue-500 hover:text-white transition-all"
+                                                            >
+                                                                <Eye size={14} /> Ver Pago
+                                                            </button>
+                                                        ) : (
+                                                            <div className="flex-1 py-2.5 bg-gray-500/10 text-gray-500 border border-gray-500/30 rounded-lg font-bold text-xs flex items-center justify-center gap-1">
+                                                                Sin Pago
+                                                            </div>
+                                                        )}
+
+                                                        <button
+                                                            onClick={() => handleRejectOrder(sale.id)}
+                                                            className="w-10 flex items-center justify-center bg-red-500/10 text-red-500 border border-red-500/30 rounded-lg hover:bg-red-500 hover:text-white transition-colors"
+                                                        >
+                                                            <X size={18} />
+                                                        </button>
+
+                                                        <button
+                                                            onClick={() => handleApproveOrder(sale.id)}
+                                                            className="flex-1 py-2.5 bg-green-500 text-black border border-green-500 rounded-lg font-bold text-xs flex items-center justify-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.3)] hover:bg-white hover:border-white transition-all"
+                                                        >
+                                                            <Check size={16} /> APROBAR
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => openTicketModal(sale)}
+                                                        className="w-full py-3 bg-white/10 text-white border border-white/20 rounded-lg font-bold text-xs flex items-center justify-center gap-2 hover:bg-neon-purple hover:border-neon-purple hover:shadow-[0_0_15px_rgba(147,51,234,0.3)] transition-all"
+                                                    >
+                                                        <Ticket size={16} /> VER TICKET DIGITAL
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center text-gray-500 py-10 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                                        No hay resultados
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -1512,7 +1615,8 @@ const DrinksManager = () => {
                     /* Sales History */
                     <div>
                         <h4 className="text-lg font-bold text-white mb-4">Historial de Ventas</h4>
-                        <div className="overflow-x-auto custom-scrollbar pb-4">
+                        {/* DESKTOP TABLE VIEW */}
+                        <div className="hidden md:block overflow-x-auto custom-scrollbar pb-4">
                             <table className="w-full text-left min-w-[600px]">
                                 <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider">
                                     <tr>
@@ -1526,7 +1630,7 @@ const DrinksManager = () => {
                                 <tbody className="divide-y divide-white/5">
                                     {sales.length > 0 ? (
                                         sales.map((sale) => (
-                                            <tr key={sale.id} className="hover:bg-white/5 transition-colors">
+                                            <tr key={`desktop-sale-${sale.id}`} className="hover:bg-white/5 transition-colors">
                                                 <td className="p-4 text-gray-300 text-sm">
                                                     {new Date(sale.created_at).toLocaleString('es-PE', {
                                                         day: '2-digit',
@@ -1550,6 +1654,35 @@ const DrinksManager = () => {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* MOBILE CARD VIEW */}
+                        <div className="md:hidden space-y-3">
+                            {sales.length > 0 ? (
+                                sales.map((sale) => (
+                                    <div key={`mobile-sale-${sale.id}`} className="bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-center group hover:bg-white/10 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-green-500/20 text-green-500 flex items-center justify-center font-bold">
+                                                <Check size={20} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-white text-sm">{sale.product_name}</h4>
+                                                <div className="text-xs text-gray-500 flex flex-col">
+                                                    <span>{new Date(sale.created_at).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                                                    <span className="text-gray-400">Cant: {sale.quantity} x S/ {parseFloat(sale.unit_price).toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-neon-green font-bold text-lg">S/ {parseFloat(sale.total_amount).toFixed(2)}</div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center text-gray-500 py-10 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                                    No hay ventas registradas
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
