@@ -72,6 +72,9 @@ const AdminDashboard = ({ onLogout }) => {
     const [selectedProof, setSelectedProof] = useState(null);
     const [isProofModalOpen, setIsProofModalOpen] = useState(false);
 
+    // Mobile Menu State
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     useEffect(() => {
         fetchSales();
     }, []);
@@ -237,7 +240,8 @@ const AdminDashboard = ({ onLogout }) => {
     return (
         <div className="min-h-screen bg-black text-white font-sans flex">
             {/* SIDEBAR NAVIGATION */}
-            <div className="w-64 bg-dark-900 border-r border-white/10 flex flex-col fixed h-screen">
+            <div className={`w-64 bg-dark-900 border-r border-white/10 flex flex-col fixed h-screen z-50 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                }`}>
                 {/* Logo Header */}
                 <div className="p-6 border-b border-white/10">
                     <div className="flex items-center gap-3">
@@ -356,13 +360,32 @@ const AdminDashboard = ({ onLogout }) => {
                 </div>
             </div>
 
+            {/* Mobile Overlay */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
+            {/* Mobile Menu Button - Always visible */}
+            <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden fixed top-4 left-4 z-[60] p-3 bg-dark-900 border border-white/10 rounded-xl text-white hover:bg-white/5 transition-colors shadow-lg"
+            >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+
             {/* MAIN CONTENT AREA */}
-            <div className="flex-1 ml-64">
+            <div className="flex-1 lg:ml-64">
+
                 {/* Top Stats Bar - Only for Ticketing Tabs */}
                 {(activeTab === 'pending' || activeTab === 'approved' || activeTab === 'scanner') && (
                     <div className="bg-dark-900/50 backdrop-blur-md border-b border-white/10 sticky top-0 z-40">
-                        <div className="container mx-auto px-6 py-4">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="container mx-auto px-4 lg:px-6 py-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
                                 <div className="bg-dark-800 p-4 rounded-xl border border-white/10 relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                                         <AlertTriangle size={48} className="text-yellow-500" />
@@ -400,7 +423,7 @@ const AdminDashboard = ({ onLogout }) => {
                 )}
 
                 {/* Content Container */}
-                <div className="container mx-auto px-6 py-10">
+                <div className="container mx-auto px-4 lg:px-6 py-6 lg:py-10">
                     {/* Content Area */}
                     {activeTab === 'scanner' ? (
                         <ScannerSection sales={sales} fetchSales={fetchSales} />
@@ -1269,8 +1292,8 @@ const DrinksManager = () => {
                                 <button
                                     onClick={() => setCategoryFilter('all')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'all'
-                                            ? 'bg-neon-gold text-black shadow-[0_0_15px_rgba(255,215,0,0.4)]'
-                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        ? 'bg-neon-gold text-black shadow-[0_0_15px_rgba(255,215,0,0.4)]'
+                                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     🍹 Todos
@@ -1278,8 +1301,8 @@ const DrinksManager = () => {
                                 <button
                                     onClick={() => setCategoryFilter('coctel')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'coctel'
-                                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-[0_0_15px_rgba(236,72,153,0.4)]'
-                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-[0_0_15px_rgba(236,72,153,0.4)]'
+                                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     🍸 Cocteles
@@ -1287,8 +1310,8 @@ const DrinksManager = () => {
                                 <button
                                     onClick={() => setCategoryFilter('licor')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'licor'
-                                            ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     🥃 Licores
@@ -1296,8 +1319,8 @@ const DrinksManager = () => {
                                 <button
                                     onClick={() => setCategoryFilter('cerveza')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'cerveza'
-                                            ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-[0_0_15px_rgba(251,191,36,0.4)]'
-                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-[0_0_15px_rgba(251,191,36,0.4)]'
+                                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     🍺 Cervezas
@@ -1305,8 +1328,8 @@ const DrinksManager = () => {
                                 <button
                                     onClick={() => setCategoryFilter('shot')}
                                     className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'shot'
-                                            ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]'
-                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     🥂 Shots
@@ -1329,10 +1352,10 @@ const DrinksManager = () => {
                                                 </h5>
                                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                     {items.map(product => (
-                                                        <button
+                                                        <div
                                                             key={product.id}
                                                             onClick={() => !editingPrice && addToCart(product)}
-                                                            className="group relative h-40 rounded-xl overflow-hidden border border-white/10 hover:border-neon-gold transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,215,0,0.3)]"
+                                                            className="group relative h-40 rounded-xl overflow-hidden border border-white/10 hover:border-neon-gold transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] cursor-pointer"
                                                         >
                                                             {/* Image */}
                                                             <div
@@ -1397,7 +1420,7 @@ const DrinksManager = () => {
                                                                     <Plus size={20} />
                                                                 </div>
                                                             )}
-                                                        </button>
+                                                        </div>
                                                     ))}
                                                 </div>
                                             </div>
@@ -1489,8 +1512,8 @@ const DrinksManager = () => {
                     /* Sales History */
                     <div>
                         <h4 className="text-lg font-bold text-white mb-4">Historial de Ventas</h4>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                        <div className="overflow-x-auto custom-scrollbar pb-4">
+                            <table className="w-full text-left min-w-[600px]">
                                 <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider">
                                     <tr>
                                         <th className="p-4">Fecha</th>
@@ -1531,7 +1554,7 @@ const DrinksManager = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 
