@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, User, LayoutDashboard, LogOut, DollarSign, Users, Ticket, AlertTriangle, Search, Eye, X, Printer, Trash2, Check, Plus } from 'lucide-react';
+import { Lock, User, LayoutDashboard, LogOut, DollarSign, Users, Ticket, AlertTriangle, Search, Eye, X, Printer, Trash2, Check, Plus, Wine, ShoppingCart, Minus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Html5QrcodeScanner } from 'html5-qrcode';
@@ -235,257 +235,316 @@ const AdminDashboard = ({ onLogout }) => {
     );
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans">
-            <nav className="border-b border-white/10 bg-dark-900/50 backdrop-blur-md sticky top-0 z-50">
-                <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="min-h-screen bg-black text-white font-sans flex">
+            {/* SIDEBAR NAVIGATION */}
+            <div className="w-64 bg-dark-900 border-r border-white/10 flex flex-col fixed h-screen">
+                {/* Logo Header */}
+                <div className="p-6 border-b border-white/10">
                     <div className="flex items-center gap-3">
-                        <LayoutDashboard className="text-neon-blue" />
+                        <LayoutDashboard className="text-neon-blue" size={28} />
                         <span className="font-display font-bold text-xl tracking-wider">BOOM! ADMIN</span>
-                        {!supabase && (
-                            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-500 text-xs font-bold">
-                                <AlertTriangle size={12} /> DEMO MODE
-                            </div>
-                        )}
                     </div>
-                    <div className="flex items-center gap-4">
-                        <button onClick={fetchSales} className="text-gray-400 hover:text-white transition-colors text-sm font-medium">
-                            Refrescar
-                        </button>
-                        <button onClick={handleResetData} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 text-xs font-bold uppercase tracking-wider">
-                            <Trash2 size={14} /> RESET DB
-                        </button>
-                        <button onClick={onLogout} className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors text-sm font-medium">
-                            <LogOut size={18} /> Salir
-                        </button>
-                    </div>
-                </div>
-            </nav>
-
-            <div className="container mx-auto px-6 py-10">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                    <div
-                        onClick={() => setActiveTab('pending')}
-                        className={`p-6 rounded-2xl border cursor-pointer transition-all relative overflow-hidden group ${activeTab === 'pending' ? 'bg-yellow-500/10 border-yellow-500 hover:bg-yellow-500/20' : 'bg-dark-800 border-white/10 hover:border-yellow-500/50'}`}
-                    >
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <AlertTriangle size={64} className="text-yellow-500" />
+                    {!supabase && (
+                        <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-500 text-xs font-bold">
+                            <AlertTriangle size={12} />
+                            DEMO MODE
                         </div>
-                        <h3 className={`text-sm uppercase tracking-widest font-medium mb-1 ${activeTab === 'pending' ? 'text-yellow-500' : 'text-gray-400'}`}>Por Aprobar</h3>
-                        <p className={`text-4xl font-bold ${activeTab === 'pending' ? 'text-white' : 'text-yellow-500'}`}>
-                            {stats.pendingOrders}
-                        </p>
-                        {stats.pendingOrders > 0 && (
-                            <div className="absolute px-2 py-1 bg-yellow-500 text-black text-xs font-bold rounded-full top-4 right-4 animate-pulse">
-                                REQUIERE ATENCIÓN
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="bg-dark-800 p-6 rounded-2xl border border-white/10 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <DollarSign size={64} />
-                        </div>
-                        <h3 className="text-gray-400 text-sm uppercase tracking-widest font-medium mb-1">Ingresos Totales</h3>
-                        <p className="text-4xl font-bold text-neon-green">S/ {stats.totalRevenue}</p>
-                    </div>
-
-                    <div className="bg-dark-800 p-6 rounded-2xl border border-white/10 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <Ticket size={64} />
-                        </div>
-                        <h3 className="text-gray-400 text-sm uppercase tracking-widest font-medium mb-1">Entradas Vendidas</h3>
-                        <p className="text-4xl font-bold text-neon-pink">{stats.ticketsSold}</p>
-                    </div>
-
-                    <div className="bg-dark-800 p-6 rounded-2xl border border-white/10 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <Users size={64} />
-                        </div>
-                        <h3 className="text-gray-400 text-sm uppercase tracking-widest font-medium mb-1">Clientes</h3>
-                        <p className="text-4xl font-bold text-neon-blue">{stats.totalSales}</p>
-                    </div>
+                    )}
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="flex gap-4 mb-6">
-                    <button
-                        onClick={() => setActiveTab('pending')}
-                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'pending'
-                            ? 'bg-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]'
-                            : 'bg-dark-800 text-gray-400 hover:text-white border border-white/10'}`}
-                    >
-                        Pendientes ({stats.pendingOrders})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('approved')}
-                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'approved'
-                            ? 'bg-neon-green text-black shadow-[0_0_15px_rgba(57,255,20,0.4)]'
-                            : 'bg-dark-800 text-gray-400 hover:text-white border border-white/10'}`}
-                    >
-                        Aprobados / Historial
-                    </button>
+                {/* Navigation Sections */}
+                <div className="flex-1 overflow-y-auto p-4">
+                    {/* BOLETERÍA Section */}
+                    <div className="mb-6">
+                        <h3 className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-3 px-2">
+                            🎫 Boletería
+                        </h3>
+                        <nav className="space-y-1">
+                            <button
+                                onClick={() => setActiveTab('pending')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'pending'
+                                    ? 'bg-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                <AlertTriangle size={18} />
+                                <span className="flex-1 text-left">Pendientes</span>
+                                {stats.pendingOrders > 0 && (
+                                    <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
+                                        {stats.pendingOrders}
+                                    </span>
+                                )}
+                            </button>
 
+                            <button
+                                onClick={() => setActiveTab('approved')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'approved'
+                                    ? 'bg-neon-green text-black shadow-[0_0_15px_rgba(57,255,20,0.4)]'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                <Ticket size={18} />
+                                <span className="flex-1 text-left">Aprobados</span>
+                            </button>
 
-                    <button
-                        onClick={() => setActiveTab('scanner')}
-                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'scanner'
-                            ? 'bg-neon-pink text-white shadow-[0_0_15px_rgba(255,0,255,0.4)]'
-                            : 'bg-dark-800 text-gray-400 hover:text-white border border-white/10'}`}
-                    >
-                        Escáner / Puerta
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('content')}
-                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'content'
-                            ? 'bg-neon-blue text-white shadow-[0_0_15px_rgba(0,255,255,0.4)]'
-                            : 'bg-dark-800 text-gray-400 hover:text-white border border-white/10'}`}
-                    >
-                        Gestor de Contenido
-                    </button>
+                            <button
+                                onClick={() => setActiveTab('scanner')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'scanner'
+                                    ? 'bg-neon-pink text-white shadow-[0_0_15px_rgba(255,0,255,0.4)]'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                <Search size={18} />
+                                <span className="flex-1 text-left">Escáner / Puerta</span>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveTab('content')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'content'
+                                    ? 'bg-neon-blue text-white shadow-[0_0_15px_rgba(0,255,255,0.4)]'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                <LayoutDashboard size={18} />
+                                <span className="flex-1 text-left">Gestor Contenido</span>
+                            </button>
+                        </nav>
+                    </div>
+
+                    {/* PUNTO DE VENTA Section */}
+                    <div className="mb-6">
+                        <h3 className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-3 px-2">
+                            🍷 Punto de Venta
+                        </h3>
+                        <nav className="space-y-1">
+                            <button
+                                onClick={() => setActiveTab('drinks')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'drinks'
+                                    ? 'bg-gradient-to-r from-neon-gold to-amber-500 text-black shadow-[0_0_15px_rgba(255,215,0,0.4)]'
+                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                <Wine size={18} />
+                                <span className="flex-1 text-left">Venta de Bebidas</span>
+                            </button>
+                        </nav>
+                    </div>
                 </div>
 
-                {/* Content Area */}
-                {activeTab === 'scanner' ? (
-                    <ScannerSection sales={sales} fetchSales={fetchSales} />
-                ) : activeTab === 'content' ? (
-                    <ContentManager />
-                ) : (
-                    <div className="bg-dark-900 rounded-2xl border border-white/10 overflow-hidden">
-                        <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-                            <h3 className="text-xl font-bold text-white">
-                                {activeTab === 'pending' ? 'Órdenes por Aprobar' : 'Ventas Aprobadas'}
-                            </h3>
-                            <div className="relative w-full md:w-64">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar cliente..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-black border border-white/20 rounded-xl py-2 pl-10 pr-4 text-white focus:border-neon-pink outline-none transition-colors"
-                                />
+                {/* Footer Actions */}
+                <div className="p-4 border-t border-white/10 space-y-2">
+                    <button
+                        onClick={fetchSales}
+                        className="w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-medium"
+                    >
+                        🔄 Refrescar
+                    </button>
+                    <button
+                        onClick={handleResetData}
+                        className="w-full px-4 py-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 text-xs font-bold uppercase tracking-wider"
+                    >
+                        <Trash2 size={14} className="inline mr-2" />
+                        RESET DB
+                    </button>
+                    <button
+                        onClick={onLogout}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm font-medium"
+                    >
+                        <LogOut size={18} />
+                        Salir
+                    </button>
+                </div>
+            </div>
+
+            {/* MAIN CONTENT AREA */}
+            <div className="flex-1 ml-64">
+                {/* Top Stats Bar - Only for Ticketing Tabs */}
+                {(activeTab === 'pending' || activeTab === 'approved' || activeTab === 'scanner') && (
+                    <div className="bg-dark-900/50 backdrop-blur-md border-b border-white/10 sticky top-0 z-40">
+                        <div className="container mx-auto px-6 py-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="bg-dark-800 p-4 rounded-xl border border-white/10 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <AlertTriangle size={48} className="text-yellow-500" />
+                                    </div>
+                                    <h3 className="text-gray-400 text-xs uppercase tracking-widest font-medium mb-1">Por Aprobar</h3>
+                                    <p className="text-3xl font-bold text-yellow-500">{stats.pendingOrders}</p>
+                                </div>
+
+                                <div className="bg-dark-800 p-4 rounded-xl border border-white/10 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <DollarSign size={48} />
+                                    </div>
+                                    <h3 className="text-gray-400 text-xs uppercase tracking-widest font-medium mb-1">Ingresos Totales</h3>
+                                    <p className="text-3xl font-bold text-neon-green">S/ {stats.totalRevenue}</p>
+                                </div>
+
+                                <div className="bg-dark-800 p-4 rounded-xl border border-white/10 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <Ticket size={48} />
+                                    </div>
+                                    <h3 className="text-gray-400 text-xs uppercase tracking-widest font-medium mb-1">Entradas Vendidas</h3>
+                                    <p className="text-3xl font-bold text-neon-pink">{stats.ticketsSold}</p>
+                                </div>
+
+                                <div className="bg-dark-800 p-4 rounded-xl border border-white/10 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <Users size={48} />
+                                    </div>
+                                    <h3 className="text-gray-400 text-xs uppercase tracking-widest font-medium mb-1">Clientes</h3>
+                                    <p className="text-3xl font-bold text-neon-blue">{stats.totalSales}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider">
-                                    <tr>
-                                        <th className="p-4">Cliente</th>
-                                        <th className="p-4">Email / Info</th>
-                                        <th className="p-4">Tipo Entrada</th>
-                                        <th className="p-4 text-center">Cant.</th>
-                                        <th className="p-4 text-right">Total</th>
-                                        <th className="p-4 text-center">Pago</th>
-                                        {activeTab === 'pending' && <th className="p-4 text-center">Captura</th>}
-                                        {activeTab === 'approved' && <th className="p-4 text-center">Estado</th>}
-                                        <th className="p-4 text-center">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {loading ? (
-                                        <tr><td colSpan="8" className="p-8 text-center text-gray-400">Cargando datos...</td></tr>
-                                    ) : filteredSales.length > 0 ? (
-                                        filteredSales.map((sale) => (
-                                            <tr key={sale.id} className="hover:bg-white/5 transition-colors group">
-                                                <td className="p-4 font-medium text-white flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center text-xs font-bold">
-                                                        {sale.name.charAt(0)}
-                                                    </div>
-                                                    {sale.name}
-                                                    <div className="text-xs text-gray-500">ID: {sale.id}</div>
-                                                </td>
-                                                <td className="p-4 text-gray-300">
-                                                    <div className="flex flex-col">
-                                                        <span>{sale.email}</span>
-                                                        <span className="text-xs text-gray-500">{sale.phone}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
-                                                    <span className={`px-2 py-1 rounded text-xs font-bold border ${(sale.ticket_name || sale.ticketName) === 'VIP' ? 'border-neon-pink text-neon-pink' :
-                                                        ((sale.ticket_name || sale.ticketName) === 'BOOM! EXP' || (sale.ticket_name || sale.ticketName) === 'BOOM EXP') ? 'border-neon-gold text-neon-gold' :
-                                                            'border-gray-500 text-gray-300'
-                                                        }`}>
-                                                        {sale.ticket_name || sale.ticketName}
-                                                    </span>
-                                                </td>
-                                                <td className="p-4 text-center text-gray-300">{sale.quantity}</td>
-                                                <td className="p-4 text-right font-bold text-neon-green">S/ {sale.total_amount || sale.total}</td>
-                                                <td className="p-4 text-center capitalize text-gray-400">
-                                                    {sale.payment_method || 'yape'}
-                                                </td>
-
-                                                {activeTab === 'pending' && (
-                                                    <td className="p-4 text-center">
-                                                        {sale.payment_proof ? (
-                                                            <button
-                                                                onClick={() => { setSelectedProof(sale); setIsProofModalOpen(true); }}
-                                                                className="text-neon-blue hover:text-white text-xs underline"
-                                                            >
-                                                                <Eye size={18} className="mx-auto" />
-                                                            </button>
-                                                        ) : (
-                                                            <span className="text-gray-600">-</span>
-                                                        )}
-                                                    </td>
-                                                )}
-
-                                                {activeTab === 'approved' && (
-                                                    <td className="p-4 text-center">
-                                                        {sale.checked_in ? (
-                                                            <span className="px-2 py-1 rounded text-xs font-bold bg-red-500/20 text-red-500 border border-red-500/50">
-                                                                USADO
-                                                            </span>
-                                                        ) : (
-                                                            <span className="px-2 py-1 rounded text-xs font-bold bg-green-500/20 text-green-500 border border-green-500/50">
-                                                                DISPONIBLE
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                )}
-
-                                                <td className="p-4 text-center">
-                                                    {activeTab === 'approved' ? (
-                                                        <button
-                                                            onClick={() => openTicketModal(sale)}
-                                                            className="p-2 rounded-lg bg-white/5 hover:bg-neon-purple text-gray-400 hover:text-white transition-all transform hover:scale-110"
-                                                            title="Ver Ticket"
-                                                        >
-                                                            <Ticket size={18} />
-                                                        </button>
-                                                    ) : (
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <button
-                                                                onClick={() => handleApproveOrder(sale.id)}
-                                                                className="p-2 rounded-lg bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white transition-all"
-                                                                title="Aprobar"
-                                                            >
-                                                                <Check size={18} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleRejectOrder(sale.id)}
-                                                                className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white transition-all"
-                                                                title="Rechazar"
-                                                            >
-                                                                <X size={18} />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="8" className="p-8 text-center text-gray-500">
-                                                No hay resultados en esta sección.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
                         </div>
                     </div>
                 )}
+
+                {/* Content Container */}
+                <div className="container mx-auto px-6 py-10">
+                    {/* Content Area */}
+                    {activeTab === 'scanner' ? (
+                        <ScannerSection sales={sales} fetchSales={fetchSales} />
+                    ) : activeTab === 'content' ? (
+                        <ContentManager />
+                    ) : activeTab === 'drinks' ? (
+                        <DrinksManager />
+                    ) : (
+                        <div className="bg-dark-900 rounded-2xl border border-white/10 overflow-hidden">
+                            <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                                <h3 className="text-xl font-bold text-white">
+                                    {activeTab === 'pending' ? 'Órdenes por Aprobar' : 'Ventas Aprobadas'}
+                                </h3>
+                                <div className="relative w-full md:w-64">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar cliente..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full bg-black border border-white/20 rounded-xl py-2 pl-10 pr-4 text-white focus:border-neon-pink outline-none transition-colors"
+                                    />
+                                </div>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider">
+                                        <tr>
+                                            <th className="p-4">Cliente</th>
+                                            <th className="p-4">Email / Info</th>
+                                            <th className="p-4">Tipo Entrada</th>
+                                            <th className="p-4 text-center">Cant.</th>
+                                            <th className="p-4 text-right">Total</th>
+                                            <th className="p-4 text-center">Pago</th>
+                                            {activeTab === 'pending' && <th className="p-4 text-center">Captura</th>}
+                                            {activeTab === 'approved' && <th className="p-4 text-center">Estado</th>}
+                                            <th className="p-4 text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {loading ? (
+                                            <tr><td colSpan="8" className="p-8 text-center text-gray-400">Cargando datos...</td></tr>
+                                        ) : filteredSales.length > 0 ? (
+                                            filteredSales.map((sale) => (
+                                                <tr key={sale.id} className="hover:bg-white/5 transition-colors group">
+                                                    <td className="p-4 font-medium text-white flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center text-xs font-bold">
+                                                            {sale.name.charAt(0)}
+                                                        </div>
+                                                        {sale.name}
+                                                        <div className="text-xs text-gray-500">ID: {sale.id}</div>
+                                                    </td>
+                                                    <td className="p-4 text-gray-300">
+                                                        <div className="flex flex-col">
+                                                            <span>{sale.email}</span>
+                                                            <span className="text-xs text-gray-500">{sale.phone}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span className={`px-2 py-1 rounded text-xs font-bold border ${(sale.ticket_name || sale.ticketName) === 'VIP' ? 'border-neon-pink text-neon-pink' :
+                                                            ((sale.ticket_name || sale.ticketName) === 'BOOM! EXP' || (sale.ticket_name || sale.ticketName) === 'BOOM EXP') ? 'border-neon-gold text-neon-gold' :
+                                                                'border-gray-500 text-gray-300'
+                                                            }`}>
+                                                            {sale.ticket_name || sale.ticketName}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-center text-gray-300">{sale.quantity}</td>
+                                                    <td className="p-4 text-right font-bold text-neon-green">S/ {sale.total_amount || sale.total}</td>
+                                                    <td className="p-4 text-center capitalize text-gray-400">
+                                                        {sale.payment_method || 'yape'}
+                                                    </td>
+
+                                                    {activeTab === 'pending' && (
+                                                        <td className="p-4 text-center">
+                                                            {sale.payment_proof ? (
+                                                                <button
+                                                                    onClick={() => { setSelectedProof(sale); setIsProofModalOpen(true); }}
+                                                                    className="text-neon-blue hover:text-white text-xs underline"
+                                                                >
+                                                                    <Eye size={18} className="mx-auto" />
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-gray-600">-</span>
+                                                            )}
+                                                        </td>
+                                                    )}
+
+                                                    {activeTab === 'approved' && (
+                                                        <td className="p-4 text-center">
+                                                            {sale.checked_in ? (
+                                                                <span className="px-2 py-1 rounded text-xs font-bold bg-red-500/20 text-red-500 border border-red-500/50">
+                                                                    USADO
+                                                                </span>
+                                                            ) : (
+                                                                <span className="px-2 py-1 rounded text-xs font-bold bg-green-500/20 text-green-500 border border-green-500/50">
+                                                                    DISPONIBLE
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                    )}
+
+                                                    <td className="p-4 text-center">
+                                                        {activeTab === 'approved' ? (
+                                                            <button
+                                                                onClick={() => openTicketModal(sale)}
+                                                                className="p-2 rounded-lg bg-white/5 hover:bg-neon-purple text-gray-400 hover:text-white transition-all transform hover:scale-110"
+                                                                title="Ver Ticket"
+                                                            >
+                                                                <Ticket size={18} />
+                                                            </button>
+                                                        ) : (
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <button
+                                                                    onClick={() => handleApproveOrder(sale.id)}
+                                                                    className="p-2 rounded-lg bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white transition-all"
+                                                                    title="Aprobar"
+                                                                >
+                                                                    <Check size={18} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleRejectOrder(sale.id)}
+                                                                    className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white transition-all"
+                                                                    title="Rechazar"
+                                                                >
+                                                                    <X size={18} />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="8" className="p-8 text-center text-gray-500">
+                                                    No hay resultados en esta sección.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* TICKET MODAL */}
@@ -636,7 +695,7 @@ const AdminDashboard = ({ onLogout }) => {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 
@@ -910,6 +969,570 @@ const ScannerSection = ({ sales, fetchSales }) => {
     );
 
 
+};
+
+const DrinksManager = () => {
+    const [products, setProducts] = useState([]);
+    const [sales, setSales] = useState([]);
+    const [cart, setCart] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [activeView, setActiveView] = useState('pos'); // 'pos' or 'history'
+    const [stats, setStats] = useState({ totalSales: 0, totalRevenue: 0 });
+    const [editingPrice, setEditingPrice] = useState(null); // {id, newPrice}
+    const [categoryFilter, setCategoryFilter] = useState('all'); // 'all', 'coctel', 'licor', 'cerveza', 'shot'
+
+    useEffect(() => {
+        fetchProducts();
+        fetchSales();
+    }, []);
+
+    const fetchProducts = async () => {
+        try {
+            if (supabase) {
+                const { data, error } = await supabase
+                    .from('boom_products')
+                    .select('*')
+                    .eq('active', true)
+                    .order('category', { ascending: true });
+
+                if (error) {
+                    console.warn('Supabase error, using fallback products:', error);
+                    // Use fallback products if table doesn't exist
+                    setProducts(getFallbackProducts());
+                } else {
+                    setProducts(data || getFallbackProducts());
+                }
+            } else {
+                setProducts(getFallbackProducts());
+            }
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            setProducts(getFallbackProducts());
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getFallbackProducts = () => {
+        // Check localStorage first
+        const stored = localStorage.getItem('boom_products_fallback');
+        if (stored) {
+            return JSON.parse(stored);
+        }
+
+        // Default products
+        const defaultProducts = [
+            { id: 1, name: 'Cuba Libre Premium', category: 'coctel', price: 15.00, image_url: 'https://img.freepik.com/fotos-premium/coctel-cuba-libre-vaso-highball-hielo-cascara-lima-paja-limas-frescas-sobre-fondo-negro-mesa_157173-3330.jpg', active: true },
+            { id: 2, name: 'Mojito Clásico', category: 'coctel', price: 18.00, image_url: 'https://cdn.craft.cloud/224393fa-1975-4d80-9067-ada3cb5948ca/assets/detail_Skinny_Mojito_4_2022.jpg', active: true },
+            { id: 3, name: 'Margarita', category: 'coctel', price: 20.00, image_url: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?q=80&w=1887&auto=format&fit=crop', active: true },
+            { id: 4, name: 'Tequila Sunrise', category: 'coctel', price: 18.00, image_url: 'https://exoticotequila.com/wp-content/uploads/2018/03/TEQUILA_SUNRISE_RC.jpg', active: true },
+            { id: 5, name: 'Gin Tonic', category: 'coctel', price: 22.00, image_url: 'https://licoreria247.pe/wp-content/uploads/2020/12/Vodka-vs-Gin.jpg.webp', active: true },
+            { id: 6, name: 'Calientito de Maracuyá', category: 'coctel', price: 12.00, image_url: 'https://polleriaslagranja.com/wp-content/uploads/2022/10/La-Granja-Real-Food-Chicken-Jarra-de-Maracuya.png', active: true },
+            { id: 7, name: 'Flor de Caña + Coca Cola', category: 'licor', price: 25.00, image_url: 'https://images.rappi.pe/products/237008-1575927253771.png', active: true },
+            { id: 8, name: 'Old Time + Guarana', category: 'licor', price: 20.00, image_url: 'https://images.rappi.pe/products/1727659843457_1727659639313_1727659637802.jpg', active: true },
+            { id: 9, name: 'Whisky Sour', category: 'coctel', price: 25.00, image_url: 'https://so-sour.com/wp-content/uploads/2024/08/Whisky-Sour.jpg', active: true },
+            { id: 10, name: 'Shot de Tequila', category: 'shot', price: 8.00, image_url: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop', active: true },
+            { id: 11, name: 'Cerveza Pilsen', category: 'cerveza', price: 8.00, image_url: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?q=80&w=2070&auto=format&fit=crop', active: true },
+            { id: 12, name: 'Cerveza Cusqueña', category: 'cerveza', price: 10.00, image_url: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?q=80&w=2070&auto=format&fit=crop', active: true },
+        ];
+
+        localStorage.setItem('boom_products_fallback', JSON.stringify(defaultProducts));
+        return defaultProducts;
+    };
+
+    const fetchSales = async () => {
+        try {
+            if (supabase) {
+                const { data, error } = await supabase
+                    .from('boom_drink_sales')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (error) {
+                    console.warn('Supabase error, using localStorage:', error);
+                    const localSales = JSON.parse(localStorage.getItem('boom_drink_sales_fallback') || '[]');
+                    setSales(localSales);
+                    calculateStats(localSales);
+                } else {
+                    setSales(data || []);
+                    calculateStats(data || []);
+                }
+            } else {
+                const localSales = JSON.parse(localStorage.getItem('boom_drink_sales_fallback') || '[]');
+                setSales(localSales);
+                calculateStats(localSales);
+            }
+        } catch (error) {
+            console.error('Error fetching sales:', error);
+            const localSales = JSON.parse(localStorage.getItem('boom_drink_sales_fallback') || '[]');
+            setSales(localSales);
+            calculateStats(localSales);
+        }
+    };
+
+    const calculateStats = (salesData) => {
+        const totalRevenue = salesData.reduce((acc, sale) => acc + parseFloat(sale.total_amount || 0), 0);
+        setStats({
+            totalSales: salesData.length,
+            totalRevenue
+        });
+    };
+
+    const addToCart = (product) => {
+        const existingItem = cart.find(item => item.id === product.id);
+        if (existingItem) {
+            setCart(cart.map(item =>
+                item.id === product.id
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+            ));
+        } else {
+            setCart([...cart, { ...product, quantity: 1 }]);
+        }
+    };
+
+    const updateQuantity = (productId, delta) => {
+        setCart(cart.map(item => {
+            if (item.id === productId) {
+                const newQuantity = item.quantity + delta;
+                return newQuantity > 0 ? { ...item, quantity: newQuantity } : item;
+            }
+            return item;
+        }).filter(item => item.quantity > 0));
+    };
+
+    const removeFromCart = (productId) => {
+        setCart(cart.filter(item => item.id !== productId));
+    };
+
+    const calculateTotal = () => {
+        return cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    };
+
+    const handleSell = async () => {
+        if (cart.length === 0) {
+            alert('El carrito está vacío');
+            return;
+        }
+
+        if (!window.confirm(`¿Confirmar venta por S/ ${calculateTotal().toFixed(2)}?`)) {
+            return;
+        }
+
+        try {
+            const salesData = cart.map((item, index) => ({
+                id: Date.now() + index, // Generate unique integer ID
+                product_id: item.id,
+                product_name: item.name,
+                quantity: item.quantity,
+                unit_price: item.price,
+                total_amount: item.price * item.quantity,
+                sold_by: 'admin',
+                created_at: new Date().toISOString()
+            }));
+
+            if (supabase) {
+                const { error } = await supabase
+                    .from('boom_drink_sales')
+                    .insert(salesData);
+
+                if (error) {
+                    console.warn('Supabase error, saving to localStorage:', error);
+                    // Fallback to localStorage
+                    const localSales = JSON.parse(localStorage.getItem('boom_drink_sales_fallback') || '[]');
+                    localSales.unshift(...salesData);
+                    localStorage.setItem('boom_drink_sales_fallback', JSON.stringify(localSales));
+                }
+            } else {
+                // Save to localStorage
+                const localSales = JSON.parse(localStorage.getItem('boom_drink_sales_fallback') || '[]');
+                localSales.unshift(...salesData);
+                localStorage.setItem('boom_drink_sales_fallback', JSON.stringify(localSales));
+            }
+
+            alert('✅ Venta registrada exitosamente');
+            setCart([]);
+            fetchSales();
+        } catch (error) {
+            console.error('Error registering sale:', error);
+            alert('Error al registrar la venta: ' + error.message);
+        }
+    };
+
+    const updatePrice = async (productId, newPrice) => {
+        const price = parseFloat(newPrice);
+        if (isNaN(price) || price < 0) {
+            alert('Precio inválido');
+            return;
+        }
+
+        try {
+            // Update in state
+            setProducts(products.map(p =>
+                p.id === productId ? { ...p, price } : p
+            ));
+
+            // Update in localStorage
+            const storedProducts = JSON.parse(localStorage.getItem('boom_products_fallback') || '[]');
+            const updatedProducts = storedProducts.map(p =>
+                p.id === productId ? { ...p, price } : p
+            );
+            localStorage.setItem('boom_products_fallback', JSON.stringify(updatedProducts));
+
+            // Update in Supabase if available
+            if (supabase) {
+                const { error } = await supabase
+                    .from('boom_products')
+                    .update({ price })
+                    .eq('id', productId);
+
+                if (error) {
+                    console.warn('Supabase update error:', error);
+                }
+            }
+
+            setEditingPrice(null);
+            alert('✅ Precio actualizado');
+        } catch (error) {
+            console.error('Error updating price:', error);
+            alert('Error al actualizar precio');
+        }
+    };
+
+    const groupedProducts = products.reduce((acc, product) => {
+        if (!acc[product.category]) {
+            acc[product.category] = [];
+        }
+        acc[product.category].push(product);
+        return acc;
+    }, {});
+
+    const categoryColors = {
+        'coctel': 'from-pink-500 to-purple-600',
+        'licor': 'from-amber-500 to-orange-600',
+        'cerveza': 'from-yellow-400 to-amber-500',
+        'shot': 'from-red-500 to-pink-600'
+    };
+
+    return (
+        <div className="bg-dark-900 rounded-2xl border border-white/10 overflow-hidden">
+            {/* Header with Stats */}
+            <div className="p-6 border-b border-white/10 bg-gradient-to-r from-neon-gold/10 to-amber-500/10">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <Wine className="text-neon-gold" size={32} />
+                        Sistema de Venta de Bebidas
+                    </h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-black/40 p-4 rounded-xl border border-white/10">
+                        <p className="text-gray-400 text-sm mb-1">Ventas Hoy</p>
+                        <p className="text-2xl font-bold text-neon-green">{stats.totalSales}</p>
+                    </div>
+                    <div className="bg-black/40 p-4 rounded-xl border border-white/10">
+                        <p className="text-gray-400 text-sm mb-1">Ingresos Totales</p>
+                        <p className="text-2xl font-bold text-neon-gold">S/ {stats.totalRevenue.toFixed(2)}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="p-6 border-b border-white/10 flex gap-4">
+                <button
+                    onClick={() => setActiveView('pos')}
+                    className={`px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'pos'
+                        ? 'bg-neon-gold text-black shadow-[0_0_15px_rgba(255,215,0,0.4)]'
+                        : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                >
+                    <ShoppingCart className="inline mr-2" size={18} />
+                    Punto de Venta
+                </button>
+                <button
+                    onClick={() => setActiveView('history')}
+                    className={`px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'history'
+                        ? 'bg-neon-blue text-white shadow-[0_0_15px_rgba(0,255,255,0.4)]'
+                        : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                >
+                    Historial de Ventas
+                </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+                {activeView === 'pos' ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Products */}
+                        <div className="lg:col-span-2">
+                            {/* Category Filter */}
+                            <div className="mb-6 flex gap-2 flex-wrap">
+                                <button
+                                    onClick={() => setCategoryFilter('all')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'all'
+                                            ? 'bg-neon-gold text-black shadow-[0_0_15px_rgba(255,215,0,0.4)]'
+                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    🍹 Todos
+                                </button>
+                                <button
+                                    onClick={() => setCategoryFilter('coctel')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'coctel'
+                                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-[0_0_15px_rgba(236,72,153,0.4)]'
+                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    🍸 Cocteles
+                                </button>
+                                <button
+                                    onClick={() => setCategoryFilter('licor')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'licor'
+                                            ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    🥃 Licores
+                                </button>
+                                <button
+                                    onClick={() => setCategoryFilter('cerveza')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'cerveza'
+                                            ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-[0_0_15px_rgba(251,191,36,0.4)]'
+                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    🍺 Cervezas
+                                </button>
+                                <button
+                                    onClick={() => setCategoryFilter('shot')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all ${categoryFilter === 'shot'
+                                            ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                                            : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    🥂 Shots
+                                </button>
+                            </div>
+
+                            {loading ? (
+                                <div className="text-center py-20">
+                                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-neon-gold border-t-transparent"></div>
+                                    <p className="text-gray-400 mt-4">Cargando productos...</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    {Object.entries(groupedProducts)
+                                        .filter(([category]) => categoryFilter === 'all' || category === categoryFilter)
+                                        .map(([category, items]) => (
+                                            <div key={category}>
+                                                <h5 className="text-sm uppercase tracking-wider text-gray-400 mb-3 font-bold">
+                                                    {category}
+                                                </h5>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                    {items.map(product => (
+                                                        <button
+                                                            key={product.id}
+                                                            onClick={() => !editingPrice && addToCart(product)}
+                                                            className="group relative h-40 rounded-xl overflow-hidden border border-white/10 hover:border-neon-gold transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,215,0,0.3)]"
+                                                        >
+                                                            {/* Image */}
+                                                            <div
+                                                                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                                                                style={{ backgroundImage: `url(${product.image_url})` }}
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-all" />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+
+                                                            {/* Content */}
+                                                            <div className="absolute inset-0 flex flex-col justify-end p-3">
+                                                                <h6 className="text-white font-bold text-sm mb-1 line-clamp-2">
+                                                                    {product.name}
+                                                                </h6>
+
+                                                                {/* Price with Edit */}
+                                                                {editingPrice?.id === product.id ? (
+                                                                    <div className="flex gap-1 items-center" onClick={(e) => e.stopPropagation()}>
+                                                                        <span className="text-gray-300 text-xs">S/</span>
+                                                                        <input
+                                                                            type="number"
+                                                                            step="0.01"
+                                                                            value={editingPrice.newPrice}
+                                                                            onChange={(e) => setEditingPrice({ ...editingPrice, newPrice: e.target.value })}
+                                                                            className="w-16 px-1 py-0.5 bg-dark-900 border border-neon-gold rounded text-neon-gold font-bold text-sm"
+                                                                            autoFocus
+                                                                        />
+                                                                        <button
+                                                                            onClick={() => updatePrice(product.id, editingPrice.newPrice)}
+                                                                            className="px-1.5 py-0.5 bg-green-500 text-black rounded text-xs font-bold"
+                                                                        >
+                                                                            ✓
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => setEditingPrice(null)}
+                                                                            className="px-1.5 py-0.5 bg-red-500 text-white rounded text-xs font-bold"
+                                                                        >
+                                                                            ✕
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex justify-between items-center">
+                                                                        <p className="text-neon-gold font-bold text-lg">
+                                                                            S/ {product.price.toFixed(2)}
+                                                                        </p>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setEditingPrice({ id: product.id, newPrice: product.price });
+                                                                            }}
+                                                                            className="text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-gray-300 hover:text-white transition-colors"
+                                                                        >
+                                                                            ✏️
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Plus Icon on Hover */}
+                                                            {!editingPrice && (
+                                                                <div className="absolute top-2 right-2 w-8 h-8 bg-neon-gold text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <Plus size={20} />
+                                                                </div>
+                                                            )}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Cart */}
+                        <div className="lg:col-span-1">
+                            <div className="bg-black/40 rounded-xl border border-white/10 p-4 sticky top-6">
+                                <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <ShoppingCart size={20} />
+                                    Carrito
+                                </h4>
+
+                                {cart.length === 0 ? (
+                                    <p className="text-gray-500 text-center py-8 text-sm">
+                                        Selecciona productos para vender
+                                    </p>
+                                ) : (
+                                    <>
+                                        <div className="space-y-3 mb-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+                                            {cart.map(item => (
+                                                <div key={item.id} className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <h6 className="text-white text-sm font-bold flex-1 pr-2">
+                                                            {item.name}
+                                                        </h6>
+                                                        <button
+                                                            onClick={() => removeFromCart(item.id)}
+                                                            className="text-red-500 hover:text-red-400"
+                                                        >
+                                                            <X size={16} />
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => updateQuantity(item.id, -1)}
+                                                                className="w-6 h-6 bg-white/10 hover:bg-white/20 rounded flex items-center justify-center text-white"
+                                                            >
+                                                                <Minus size={14} />
+                                                            </button>
+                                                            <span className="text-white font-bold w-8 text-center">
+                                                                {item.quantity}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => updateQuantity(item.id, 1)}
+                                                                className="w-6 h-6 bg-white/10 hover:bg-white/20 rounded flex items-center justify-center text-white"
+                                                            >
+                                                                <Plus size={14} />
+                                                            </button>
+                                                        </div>
+                                                        <p className="text-neon-gold font-bold">
+                                                            S/ {(item.price * item.quantity).toFixed(2)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="border-t border-white/10 pt-4 mb-4">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <span className="text-gray-400 text-lg">TOTAL</span>
+                                                <span className="text-neon-gold font-bold text-3xl">
+                                                    S/ {calculateTotal().toFixed(2)}
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={handleSell}
+                                                className="w-full py-4 bg-gradient-to-r from-neon-gold to-amber-500 text-black font-bold rounded-xl text-lg hover:shadow-[0_0_30px_rgba(255,215,0,0.5)] transition-all transform hover:scale-105"
+                                            >
+                                                VENDER
+                                            </button>
+                                            <button
+                                                onClick={() => setCart([])}
+                                                className="w-full mt-2 py-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white font-medium rounded-lg transition-all"
+                                            >
+                                                Limpiar Carrito
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    /* Sales History */
+                    <div>
+                        <h4 className="text-lg font-bold text-white mb-4">Historial de Ventas</h4>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-white/5 text-gray-400 text-sm uppercase tracking-wider">
+                                    <tr>
+                                        <th className="p-4">Fecha</th>
+                                        <th className="p-4">Producto</th>
+                                        <th className="p-4 text-center">Cant.</th>
+                                        <th className="p-4 text-right">Precio Unit.</th>
+                                        <th className="p-4 text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {sales.length > 0 ? (
+                                        sales.map((sale) => (
+                                            <tr key={sale.id} className="hover:bg-white/5 transition-colors">
+                                                <td className="p-4 text-gray-300 text-sm">
+                                                    {new Date(sale.created_at).toLocaleString('es-PE', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </td>
+                                                <td className="p-4 text-white font-medium">{sale.product_name}</td>
+                                                <td className="p-4 text-center text-gray-300">{sale.quantity}</td>
+                                                <td className="p-4 text-right text-gray-300">S/ {parseFloat(sale.unit_price).toFixed(2)}</td>
+                                                <td className="p-4 text-right font-bold text-neon-green">S/ {parseFloat(sale.total_amount).toFixed(2)}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="p-8 text-center text-gray-500">
+                                                No hay ventas registradas
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };
 
 const ContentManager = () => {
