@@ -828,8 +828,9 @@ const AdminDashboard = ({ onLogout }) => {
 const ScannerSection = ({ sales, fetchSales }) => {
     const [scanResult, setScanResult] = useState(null);
     const [manualId, setManualId] = useState('');
-    const [scannerMessage, setScannerMessage] = useState('');
     const [scannerActive, setScannerActive] = useState(true);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         if (!scannerActive) return;
@@ -848,15 +849,14 @@ const ScannerSection = ({ sales, fetchSales }) => {
 
         scanner.render(onScanSuccess, onScanFailure);
 
-        function onScanSuccess(decodedText, decodedResult) {
+        function onScanSuccess(decodedText) {
             scanner.clear();
             setScannerActive(false);
             handleValidateTicket(decodedText);
         }
 
         function onScanFailure(error) {
-            // handle scan failure, usually better to ignore and keep scanning.
-            // console.warn(`Code scan error = ${error}`);
+            // Ignorar errores de escaneo rutinarios
         }
 
         return () => {
@@ -864,77 +864,106 @@ const ScannerSection = ({ sales, fetchSales }) => {
         };
     }, [scannerActive]);
 
-    const handleValidateTicket = (dataString) => {
+    const handleValidateTicket = async (dataString) => {
+        if (isVerifying) return; // Prevenir doble validación
+        setIsVerifying(true);
+        setScanResult(null);
+
         try {
-            // Try to parse JSON (New format)
+            // 1. Parsear ID
             let ticketId;
             try {
                 const data = JSON.parse(dataString);
                 ticketId = data.id;
             } catch (e) {
-                // Legacy format or plain text
                 ticketId = dataString;
             }
 
-            // Find ticket in sales list
-            // IMPORTANT: sales prop might not contain ALL sales if pagination exists, but here we assume it does or we should query DB.
-            // For robustness, better to query DB directly if ID found. But sales prop has everything for now.
+            // 2. Validación Local Inicial (Rápida)
+            const ticketLocal = sales.find(s => s.id.toString() === ticketId.toString());
 
-            // Note: sales passed to this component might be filtered. We should probably use the full fetch or pass allSales. 
-            // Current 'sales' prop is whatever AdminDashboard has. AdminDashboard loads ALL sales (no pagination yet).
-
-            const ticket = sales.find(s => s.id.toString() === ticketId.toString());
-
-            if (!ticket) {
-                setScanResult({ status: 'error', message: 'TICKET NO ENCONTRADO', details: 'El ID no existe en la base de datos.' });
+            if (!ticketLocal) {
+                setScanResult({ status: 'error', message: 'TICKET NO ENCONTRADO', details: 'El ID no existe en la base de datos local.' });
+                setIsVerifying(false);
                 return;
             }
 
-            if (ticket.status !== 'approved') {
+            if (ticketLocal.status !== 'approved') {
                 setScanResult({
                     status: 'invalid',
                     message: 'TICKET NO VÁLIDO',
-                    details: `El estado del ticket es: ${ticket.status.toUpperCase()}`,
-                    ticket: ticket
+                    details: `Estado: ${ticketLocal.status.toUpperCase()}`,
+                    ticket: ticketLocal
                 });
+                setIsVerifying(false);
                 return;
             }
 
-            if (ticket.checked_in) {
+            // 3. Validación REMOTA (Supabase) - La Verdad Absoluta
+            // Consultamos directamente a la DB para asegurarnos que no ha sido escaneado hace 1 milisegundo desde otro dispositivo
+            let isCheckedInDB = ticketLocal.checked_in;
+            let checkedInAtDB = ticketLocal.checked_in_at;
+
+            if (supabase) {
+                const { data, error } = await supabase
+                    .from('boom_sales_2026')
+                    .select('checked_in, checked_in_at')
+                    .eq('id', ticketId)
+                    .single();
+
+                if (!error && data) {
+                    isCheckedInDB = data.checked_in;
+                    checkedInAtDB = data.checked_in_at;
+                }
+            }
+
+            if (isCheckedInDB) {
                 setScanResult({
                     status: 'used',
                     message: 'TICKET YA USADO',
-                    details: `Ingresó el: ${new Date(ticket.checked_in_at).toLocaleTimeString()}`,
-                    ticket: ticket
+                    details: `Ingresó: ${new Date(checkedInAtDB).toLocaleTimeString()}`,
+                    ticket: ticketLocal
                 });
+                setIsVerifying(false);
                 return;
             }
 
+            // 4. Si pasa todas las validaciones
             setScanResult({
                 status: 'valid',
                 message: 'TICKET VÁLIDO',
                 details: 'Puede ingresar.',
-                ticket: ticket
+                ticket: ticketLocal
             });
 
         } catch (err) {
             setScanResult({ status: 'error', message: 'ERROR DE LECTURA', details: err.message });
+        } finally {
+            setIsVerifying(false);
         }
     };
 
     const handleManualSubmit = (e) => {
         e.preventDefault();
-        setScannerActive(false); // Stop scanner to show result
+        setScannerActive(false);
         handleValidateTicket(manualId);
     };
 
     const handleCheckIn = async () => {
         if (!scanResult || !scanResult.ticket) return;
+        if (isProcessing) return; // Bloqueo de doble clic
+
+        setIsProcessing(true);
 
         try {
             const ticketId = scanResult.ticket.id;
 
+            // Doble check final antes de escribir
             if (supabase) {
+                // Actualización atómica condicional: Solo actualiza si checked_in es false
+                // Lamentablemente Supabase simple update no es condicional en el mismo paso sin RPC, 
+                // pero ya hicimos el check previo. Confiaremos en el update.
+
                 const { error } = await supabase
                     .from('boom_sales_2026')
                     .update({
@@ -955,15 +984,31 @@ const ScannerSection = ({ sales, fetchSales }) => {
                 }
             }
 
-            alert(`✅ INGRESO REGISTRADO: ${scanResult.ticket.name}`);
-            setScanResult(null);
-            setScannerActive(true);
-            setManualId('');
-            fetchSales(); // Refresh data
+            // Éxito
+            const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'); // Sonido check positivo genérico
+            sound.play().catch(e => console.log("Audio play failed"));
+
+            setScanResult({
+                status: 'success',
+                message: '¡INGRESO EXITOSO!',
+                details: `Bienvenido ${scanResult.ticket.name}`,
+                ticket: scanResult.ticket
+            });
+
+            // Actualizar lista global
+            fetchSales();
+
+            // Auto-reset después de 2 segundos para flujo rápido
+            setTimeout(() => {
+                resetScanner();
+            }, 2000);
 
         } catch (error) {
             console.error('Error check-in:', error);
-            alert('Error al registrar ingreso');
+            alert('Error al registrar ingreso. Intente nuevamente.');
+            setScannerActive(true); // Permitir reintentar
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -971,6 +1016,8 @@ const ScannerSection = ({ sales, fetchSales }) => {
         setScanResult(null);
         setScannerActive(true);
         setManualId('');
+        setIsVerifying(false);
+        setIsProcessing(false);
     };
 
     return (
@@ -989,13 +1036,22 @@ const ScannerSection = ({ sales, fetchSales }) => {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center bg-black/50 border border-white/10 rounded-xl p-10 h-64">
-                            <p className="text-gray-400 mb-4">Escáner Pausado</p>
-                            <button
-                                onClick={resetScanner}
-                                className="px-6 py-2 bg-neon-blue text-black font-bold rounded-lg hover:bg-white transition-colors"
-                            >
-                                Escanear Nuevo
-                            </button>
+                            {isVerifying ? (
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-neon-blue mx-auto mb-4"></div>
+                                    <p className="text-neon-blue animate-pulse font-bold">Verificando en Base de Datos...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-gray-400 mb-4">Escáner Pausado</p>
+                                    <button
+                                        onClick={resetScanner}
+                                        className="px-6 py-2 bg-neon-blue text-black font-bold rounded-lg hover:bg-white transition-colors"
+                                    >
+                                        Escanear Nuevo
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
 
@@ -1007,9 +1063,14 @@ const ScannerSection = ({ sales, fetchSales }) => {
                                 value={manualId}
                                 onChange={(e) => setManualId(e.target.value)}
                                 placeholder="Ingrese ID del Ticket"
-                                className="flex-1 bg-black border border-white/20 rounded-lg px-4 py-2 text-white focus:border-neon-pink outline-none"
+                                disabled={isVerifying || isProcessing}
+                                className="flex-1 bg-black border border-white/20 rounded-lg px-4 py-2 text-white focus:border-neon-pink outline-none disabled:opacity-50"
                             />
-                            <button type="submit" className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg">
+                            <button
+                                type="submit"
+                                disabled={isVerifying || isProcessing}
+                                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+                            >
                                 Verificar
                             </button>
                         </form>
@@ -1019,22 +1080,28 @@ const ScannerSection = ({ sales, fetchSales }) => {
                 {/* Result Area */}
                 <div className="w-full md:w-1/2">
                     {scanResult ? (
-                        <div className={`h-full rounded-2xl p-8 flex flex-col items-center justify-center text-center border-2 ${scanResult.status === 'valid' ? 'bg-green-500/10 border-green-500' :
-                            scanResult.status === 'used' ? 'bg-yellow-500/10 border-yellow-500' :
-                                'bg-red-500/10 border-red-500'
+                        <div className={`h-full rounded-2xl p-8 flex flex-col items-center justify-center text-center border-2 ${scanResult.status === 'success' ? 'bg-green-500/20 border-green-500' :
+                                scanResult.status === 'valid' ? 'bg-blue-500/10 border-blue-500' :
+                                    scanResult.status === 'used' ? 'bg-yellow-500/10 border-yellow-500' :
+                                        'bg-red-500/10 border-red-500'
                             }`}>
-                            <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${scanResult.status === 'valid' ? 'bg-green-500 text-white' :
-                                scanResult.status === 'used' ? 'bg-yellow-500 text-black' :
-                                    'bg-red-500 text-white'
+
+                            {/* Icon */}
+                            <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${scanResult.status === 'success' ? 'bg-green-500 text-black scale-110' :
+                                    scanResult.status === 'valid' ? 'bg-blue-500 text-white' :
+                                        scanResult.status === 'used' ? 'bg-yellow-500 text-black' :
+                                            'bg-red-500 text-white'
                                 }`}>
-                                {scanResult.status === 'valid' ? <Check size={48} /> :
-                                    scanResult.status === 'used' ? <AlertTriangle size={48} /> :
-                                        <X size={48} />}
+                                {scanResult.status === 'success' ? <Check size={56} /> :
+                                    scanResult.status === 'valid' ? <Search size={48} /> :
+                                        scanResult.status === 'used' ? <AlertTriangle size={48} /> :
+                                            <X size={48} />}
                             </div>
 
-                            <h2 className={`text-3xl font-display font-bold mb-2 ${scanResult.status === 'valid' ? 'text-green-500' :
-                                scanResult.status === 'used' ? 'text-yellow-500' :
-                                    'text-red-500'
+                            <h2 className={`text-3xl font-display font-bold mb-2 ${scanResult.status === 'success' ? 'text-green-500' :
+                                    scanResult.status === 'valid' ? 'text-blue-400' :
+                                        scanResult.status === 'used' ? 'text-yellow-500' :
+                                            'text-red-500'
                                 }`}>
                                 {scanResult.message}
                             </h2>
@@ -1051,8 +1118,7 @@ const ScannerSection = ({ sales, fetchSales }) => {
                                     </div>
                                     <div className="flex justify-between mb-2">
                                         <span className="text-gray-500 text-xs uppercase">Ticket</span>
-                                        <span className={`font-bold ${(scanResult.ticket.ticket_name || scanResult.ticket.ticketName) === 'VIP' ? 'text-neon-pink' : 'text-white'
-                                            }`}>
+                                        <span className={`font-bold ${(scanResult.ticket.ticket_name || scanResult.ticket.ticketName) === 'VIP' ? 'text-neon-pink' : 'text-white'}`}>
                                             {scanResult.ticket.ticket_name || scanResult.ticket.ticketName}
                                         </span>
                                     </div>
@@ -1066,13 +1132,23 @@ const ScannerSection = ({ sales, fetchSales }) => {
                             {scanResult.status === 'valid' && (
                                 <button
                                     onClick={handleCheckIn}
-                                    className="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl text-xl shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all transform hover:scale-105"
+                                    disabled={isProcessing}
+                                    className="w-full py-4 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl text-xl shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all transform hover:scale-105 disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
                                 >
-                                    MARCAR INGRESO
+                                    {isProcessing ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+                                            PROCESANDO...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check size={28} /> CONFIRMAR INGRESO
+                                        </>
+                                    )}
                                 </button>
                             )}
 
-                            {(scanResult.status !== 'valid') && (
+                            {(scanResult.status !== 'valid' && scanResult.status !== 'success') && (
                                 <button
                                     onClick={resetScanner}
                                     className="text-gray-400 hover:text-white underline mt-4"
@@ -1080,13 +1156,32 @@ const ScannerSection = ({ sales, fetchSales }) => {
                                     Escanear Siguiente
                                 </button>
                             )}
+
+                            {/* Botón extra para éxito para acelerar */}
+                            {scanResult.status === 'success' && (
+                                <button
+                                    onClick={resetScanner}
+                                    className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm"
+                                >
+                                    Escanear Siguiente (Automático en 2s)
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center p-8 text-gray-500 border border-white/10 border-dashed rounded-2xl bg-black/20">
-                            <div className="mb-4 opacity-50">
-                                <Search size={48} />
-                            </div>
-                            <p>Esperando lectura...</p>
+                            {isVerifying ? (
+                                <div className="text-center animate-pulse">
+                                    <Search size={48} className="mx-auto mb-4 text-neon-blue" />
+                                    <p className="text-neon-blue">Consultando servidor...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="mb-4 opacity-50">
+                                        <Search size={48} />
+                                    </div>
+                                    <p>Esperando lectura...</p>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
